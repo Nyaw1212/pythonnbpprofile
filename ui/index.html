@@ -9,10 +9,31 @@
 <body>
   <div class="app-shell">
     <aside class="sidebar">
-      <div class="brand-mark">NBP</div>
-      <div><div class="brand-title">Personnel</div><div class="brand-subtitle">Lookup</div></div>
-      <div class="sidebar-spacer"></div>
+      <div class="sidebar-brand">
+        <div class="brand-mark">NBP</div>
+        <div><div class="brand-title">Personnel</div><div class="brand-subtitle">Lookup</div></div>
+      </div>
+
       <div class="sync-chip"><span></span> Local database</div>
+
+      <div class="sidebar-filters">
+        <div class="sidebar-filter-section">
+          <div class="sidebar-filter-heading">Camp</div>
+          <div id="campChips" class="sidebar-chip-list"></div>
+        </div>
+
+        <div class="sidebar-filter-section grow-section">
+          <div class="sidebar-filter-heading">Office</div>
+          <div id="officeChips" class="sidebar-chip-list scroll-chip-list"></div>
+        </div>
+
+        <div class="sidebar-filter-section grow-section">
+          <div class="sidebar-filter-heading">Rank</div>
+          <div id="rankChips" class="sidebar-chip-list scroll-chip-list"></div>
+        </div>
+
+        <button id="clearButton" class="sidebar-clear" type="button">Clear filters</button>
+      </div>
     </aside>
 
     <main class="content">
@@ -25,23 +46,12 @@
         <div class="stat-card"><span id="totalPersonnel">0</span><small>Personnel</small></div>
       </header>
 
-      <section class="search-panel">
-        <div class="search-tools">
-          <div class="search-area">
-            <div class="search-box multiline-search">
-              <span class="search-icon">⌕</span>
-              <textarea id="searchInput" rows="3" placeholder="Search names or badges — one per line..." autocomplete="off"></textarea>
-            </div>
-            <div class="search-hint">Paste multiple names on separate lines.</div>
-          </div>
-
-          <div class="chip-filters">
-            <div class="chip-row"><span class="chip-label">Camp</span><div id="campChips" class="chip-list"></div></div>
-            <div class="chip-row"><span class="chip-label">Office</span><div id="officeChips" class="chip-list horizontal-chips"></div></div>
-            <div class="chip-row"><span class="chip-label">Rank</span><div id="rankChips" class="chip-list horizontal-chips"></div></div>
-          </div>
-          <button id="clearButton" class="clear-chip" type="button">Clear all</button>
+      <section class="search-panel compact-search-panel">
+        <div class="search-box multiline-search">
+          <span class="search-icon">⌕</span>
+          <textarea id="searchInput" rows="3" placeholder="Search names or badges — one per line..." autocomplete="off"></textarea>
         </div>
+        <div class="search-hint">Paste multiple names on separate lines.</div>
       </section>
 
       <section class="results-heading"><div><h2>Results</h2><p id="resultCount" class="muted">Loading...</p></div></section>
