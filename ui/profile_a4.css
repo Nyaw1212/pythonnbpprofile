@@ -1,0 +1,154 @@
+.profile-modal-frame {
+  position: relative;
+  z-index: 1;
+  width: min(210mm, calc(100vw - 44px));
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+  border-radius: 12px;
+  box-shadow: 0 30px 100px rgba(0, 0, 0, .38);
+  background: #dfe4e8;
+}
+
+.profile-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 10px 8px 14px;
+  background: #16202a;
+  color: #dce4eb;
+  border-bottom: 1px solid #34424e;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .03em;
+}
+
+.profile-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.save-pdf-button {
+  border: 1px solid #d99d10;
+  border-radius: 8px;
+  background: #f0b429;
+  color: #17202a;
+  padding: 7px 13px;
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.save-pdf-button:hover:not(:disabled) { background: #f6c54b; }
+.save-pdf-button:disabled { opacity: .65; cursor: wait; }
+
+.pdf-status {
+  max-width: 220px;
+  color: #aeb9c4;
+  font-size: 11px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pdf-status.success { color: #69d39b; }
+.pdf-status.error { color: #ff9b9b; }
+
+.profile-close {
+  position: static;
+  float: none;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #475560;
+  border-radius: 8px;
+  background: #202c36;
+  color: #dce4eb;
+  font-size: 21px;
+  line-height: 1;
+  box-shadow: none;
+}
+.profile-close:hover { background: #2b3944; color: white; }
+
+.profile-sheet {
+  width: 100%;
+  min-height: 297mm;
+  max-height: none;
+  overflow: visible;
+  border-radius: 0;
+  padding: 12mm 12mm 11mm;
+  background: white;
+  box-shadow: none;
+}
+
+.profile-sheet-header {
+  padding: 0 0 5mm;
+  border-bottom-width: 1mm;
+}
+.profile-emblem {
+  width: 17mm;
+  height: 17mm;
+  border-width: 1.3mm;
+  font-size: 14px;
+}
+.profile-sheet-header h2 { font-size: 25px; }
+.profile-sheet-header p { font-size: 10px; }
+
+.profile-main-grid {
+  grid-template-columns: 49mm minmax(0, 1fr);
+  gap: 6mm;
+  margin-top: 5mm;
+}
+.profile-identity { padding-right: 5mm; }
+.profile-photo-large {
+  width: 45mm;
+  height: 54mm;
+  aspect-ratio: auto;
+  margin: 0 auto;
+  font-size: 38px;
+}
+.profile-identity h3 { font-size: 17px; margin-top: 3mm; }
+.identity-rank { font-size: 11px; margin-bottom: 3mm; }
+.identity-list > div { padding: 2.4mm .5mm; }
+.identity-list span, .office-info-grid span { font-size: 8px; }
+.identity-list strong, .office-info-grid strong { font-size: 10px; }
+
+.profile-body { gap: 4mm; }
+.profile-section { border-radius: 2mm; }
+.profile-section-title { padding: 2.5mm 3mm; font-size: 11px; }
+.office-info-grid > div { padding: 2.8mm 3.5mm; }
+.current-status { padding: 1mm 2.5mm; font-size: 8px !important; }
+.profile-table { min-width: 0; table-layout: fixed; }
+.profile-table th { padding: 2mm 1.2mm; font-size: 7px; }
+.profile-table td { padding: 2.2mm 1.4mm; font-size: 8px; }
+.placeholder-row td { padding: 8mm 2mm !important; }
+
+.profile-lower-grid { gap: 4mm; margin-top: 4mm; }
+.section-placeholder { min-height: 25mm; font-size: 9px; padding: 5mm; }
+.remarks-section { margin-top: 4mm; }
+.remarks-section .section-placeholder { min-height: 18mm; }
+
+.profile-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 10mm;
+  margin-top: 5mm;
+  padding-top: 3mm;
+  border-top: 1px solid #d8e0e6;
+  color: #0b2e5d;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+@media (max-width: 850px) {
+  .profile-modal-frame { width: calc(100vw - 20px); }
+  .profile-sheet { min-height: 297mm; padding: 8mm; }
+  .profile-main-grid { grid-template-columns: 42mm minmax(0, 1fr); gap: 4mm; }
+  .profile-photo-large { width: 38mm; height: 46mm; }
+  .profile-sheet-header h2 { font-size: 21px; }
+  .profile-lower-grid { grid-template-columns: 1fr; }
+}
