@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NBP Personnel Lookup</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-mark">NBP</div>
+      <div>
+        <div class="brand-title">Personnel</div>
+        <div class="brand-subtitle">Lookup</div>
+      </div>
+      <div class="sidebar-spacer"></div>
+      <div class="sync-chip"><span></span> Local database</div>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">NEW BILIBID PRISON</p>
+          <h1>Personnel Lookup</h1>
+          <p class="muted">Fast local search using the synced personnel database.</p>
+        </div>
+        <div class="stat-card">
+          <span id="totalPersonnel">0</span>
+          <small>Personnel</small>
+        </div>
+      </header>
+
+      <section class="search-panel">
+        <div class="search-box">
+          <span class="search-icon">⌕</span>
+          <input id="searchInput" type="search" placeholder="Search name, badge number, or rank..." autocomplete="off">
+        </div>
+        <div class="filters">
+          <select id="campFilter"><option value="">All camps</option></select>
+          <select id="officeFilter"><option value="">All offices</option></select>
+          <select id="rankFilter"><option value="">All ranks</option></select>
+          <button id="clearButton" class="secondary-button">Clear</button>
+        </div>
+      </section>
+
+      <section class="results-heading">
+        <div>
+          <h2>Results</h2>
+          <p id="resultCount" class="muted">Loading...</p>
+        </div>
+      </section>
+
+      <section id="results" class="results-grid"></section>
+    </main>
+  </div>
+
+  <div id="profileModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal></div>
+    <article class="profile-card">
+      <button class="close-button" data-close-modal aria-label="Close">×</button>
+      <div class="profile-photo" id="profileInitials">--</div>
+      <p class="eyebrow" id="profileBadge"></p>
+      <h2 id="profileName"></h2>
+      <p class="profile-rank" id="profileRank"></p>
+      <div class="profile-details" id="profileDetails"></div>
+    </article>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
