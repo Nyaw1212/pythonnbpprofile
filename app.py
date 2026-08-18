@@ -19,6 +19,9 @@ class Api:
     def search_personnel(self, query="", camp="", office="", rank="", limit=100):
         return self.personnel.search(query, camp, office, rank, limit)
 
+    def search_personnel_paged(self, query="", camp="", office="", rank="", page=1, page_size=25):
+        return self.personnel.search_paged(query, camp, office, rank, page, page_size)
+
     def get_profile(self, badge_number):
         return self.personnel.get_profile(str(badge_number))
 
