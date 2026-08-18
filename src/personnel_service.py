@@ -10,13 +10,13 @@ class PersonnelService:
         self.db_path = db_path
         initialize(self.db_path)
 
-    def search(
+    def _search_one(
         self,
-        query: str = "",
-        camp: str = "",
-        office: str = "",
-        rank: str = "",
-        limit: int = 100,
+        query: str,
+        camp: str,
+        office: str,
+        rank: str,
+        limit: int,
     ) -> list[dict[str, Any]]:
         conditions = []
         params: dict[str, Any] = {"limit": max(1, min(int(limit), 500))}
@@ -31,7 +31,8 @@ class PersonnelService:
                 "last_name LIKE :query OR "
                 "first_name LIKE :query OR "
                 "middle_name LIKE :query OR "
-                "TRIM(COALESCE(first_name,'') || ' ' || COALESCE(middle_name,'') || ' ' || COALESCE(last_name,'')) LIKE :query"
+                "TRIM(COALESCE(first_name,'') || ' ' || COALESCE(middle_name,'') || ' ' || COALESCE(last_name,'')) LIKE :query OR "
+                "TRIM(COALESCE(last_name,'') || ' ' || COALESCE(first_name,'') || ' ' || COALESCE(middle_name,'')) LIKE :query"
                 ")"
             )
 
@@ -56,6 +57,40 @@ class PersonnelService:
 
         with connect(self.db_path) as connection:
             return [dict(row) for row in connection.execute(sql, params).fetchall()]
+
+    def search(
+        self,
+        query: str = "",
+        camp: str = "",
+        office: str = "",
+        rank: str = "",
+        limit: int = 100,
+    ) -> list[dict[str, Any]]:
+        max_results = max(1, min(int(limit), 500))
+        terms = [line.strip() for line in (query or "").splitlines() if line.strip()]
+
+        if not terms:
+            return self._search_one("", camp, office, rank, max_results)
+
+        results: list[dict[str, Any]] = []
+        seen_badges: set[str] = set()
+
+        for term in terms:
+            remaining = max_results - len(results)
+            if remaining <= 0:
+                break
+
+            matches = self._search_one(term, camp, office, rank, remaining)
+            for person in matches:
+                badge = str(person.get("badge_number") or "")
+                if badge in seen_badges:
+                    continue
+                seen_badges.add(badge)
+                results.append(person)
+                if len(results) >= max_results:
+                    break
+
+        return results
 
     def get_profile(self, badge_number: str) -> dict[str, Any] | None:
         with connect(self.db_path) as connection:
