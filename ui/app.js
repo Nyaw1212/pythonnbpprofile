@@ -21,11 +21,19 @@ function cell(value, className = '') {
   return td;
 }
 
+function updateFilterChips() {
+  document.querySelectorAll('[data-filter-chip]').forEach((chip) => {
+    const select = chip.querySelector('select');
+    chip.classList.toggle('active', Boolean(select && select.value));
+  });
+}
+
 async function loadFilters() {
   const filters = await pywebview.api.get_filters();
   filters.camp.forEach((value) => $('campFilter').appendChild(option(value)));
   filters.office.forEach((value) => $('officeFilter').appendChild(option(value)));
   filters.rank.forEach((value) => $('rankFilter').appendChild(option(value)));
+  updateFilterChips();
 }
 
 async function loadStats() {
@@ -128,14 +136,22 @@ window.addEventListener('pywebviewready', async () => {
   await runSearch();
 
   $('searchInput').addEventListener('input', scheduleSearch);
-  ['campFilter', 'officeFilter', 'rankFilter'].forEach((id) => $(id).addEventListener('change', runSearch));
+  ['campFilter', 'officeFilter', 'rankFilter'].forEach((id) => {
+    $(id).addEventListener('change', () => {
+      updateFilterChips();
+      runSearch();
+    });
+  });
+
   $('clearButton').addEventListener('click', () => {
     $('searchInput').value = '';
     $('campFilter').value = '';
     $('officeFilter').value = '';
     $('rankFilter').value = '';
+    updateFilterChips();
     runSearch();
   });
+
   document.querySelectorAll('[data-close-modal]').forEach((node) => node.addEventListener('click', closeProfile));
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeProfile();
