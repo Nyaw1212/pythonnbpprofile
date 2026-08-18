@@ -10,10 +10,7 @@
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand-mark">NBP</div>
-      <div>
-        <div class="brand-title">Personnel</div>
-        <div class="brand-subtitle">Lookup</div>
-      </div>
+      <div><div class="brand-title">Personnel</div><div class="brand-subtitle">Lookup</div></div>
       <div class="sidebar-spacer"></div>
       <div class="sync-chip"><span></span> Local database</div>
     </aside>
@@ -25,67 +22,33 @@
           <h1>Personnel Lookup</h1>
           <p class="muted">Fast local search using the synced personnel database.</p>
         </div>
-        <div class="stat-card">
-          <span id="totalPersonnel">0</span>
-          <small>Personnel</small>
-        </div>
+        <div class="stat-card"><span id="totalPersonnel">0</span><small>Personnel</small></div>
       </header>
 
       <section class="search-panel">
-        <div class="search-box multiline-search">
-          <span class="search-icon">⌕</span>
-          <textarea id="searchInput" rows="3" placeholder="Search one or multiple personnel — one name or badge per line..." autocomplete="off"></textarea>
-        </div>
-        <div class="search-hint">Tip: paste multiple names on separate lines. Results follow the same order as your search list.</div>
+        <div class="search-tools">
+          <div class="search-area">
+            <div class="search-box multiline-search">
+              <span class="search-icon">⌕</span>
+              <textarea id="searchInput" rows="3" placeholder="Search names or badges — one per line..." autocomplete="off"></textarea>
+            </div>
+            <div class="search-hint">Paste multiple names on separate lines.</div>
+          </div>
 
-        <div class="filter-bar">
-          <span class="filter-caption">Filters</span>
-
-          <label class="filter-chip" data-filter-chip for="campFilter">
-            <span class="filter-chip-label">Camp</span>
-            <select id="campFilter" aria-label="Camp filter">
-              <option value="">All</option>
-            </select>
-          </label>
-
-          <label class="filter-chip" data-filter-chip for="officeFilter">
-            <span class="filter-chip-label">Office</span>
-            <select id="officeFilter" aria-label="Office filter">
-              <option value="">All</option>
-            </select>
-          </label>
-
-          <label class="filter-chip" data-filter-chip for="rankFilter">
-            <span class="filter-chip-label">Rank</span>
-            <select id="rankFilter" aria-label="Rank filter">
-              <option value="">All</option>
-            </select>
-          </label>
-
+          <div class="chip-filters">
+            <div class="chip-row"><span class="chip-label">Camp</span><div id="campChips" class="chip-list"></div></div>
+            <div class="chip-row"><span class="chip-label">Office</span><div id="officeChips" class="chip-list horizontal-chips"></div></div>
+            <div class="chip-row"><span class="chip-label">Rank</span><div id="rankChips" class="chip-list horizontal-chips"></div></div>
+          </div>
           <button id="clearButton" class="clear-chip" type="button">Clear all</button>
         </div>
       </section>
 
-      <section class="results-heading">
-        <div>
-          <h2>Results</h2>
-          <p id="resultCount" class="muted">Loading...</p>
-        </div>
-      </section>
+      <section class="results-heading"><div><h2>Results</h2><p id="resultCount" class="muted">Loading...</p></div></section>
 
       <section class="table-shell" aria-label="Personnel results">
         <table class="personnel-table">
-          <thead>
-            <tr>
-              <th class="col-badge">Badge</th>
-              <th class="col-rank">Rank</th>
-              <th>Name</th>
-              <th>Camp</th>
-              <th>Office</th>
-              <th>Classification</th>
-              <th>Type</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Badge</th><th>Rank</th><th>Name</th><th>Camp</th><th>Office</th><th>Classification</th><th>Type</th></tr></thead>
           <tbody id="results"></tbody>
         </table>
         <div id="emptyState" class="empty-state hidden">No personnel matched your search.</div>
@@ -98,13 +61,10 @@
     <article class="profile-card">
       <button class="close-button" data-close-modal aria-label="Close">×</button>
       <div class="profile-photo" id="profileInitials">--</div>
-      <p class="eyebrow" id="profileBadge"></p>
-      <h2 id="profileName"></h2>
-      <p class="profile-rank" id="profileRank"></p>
+      <p class="eyebrow" id="profileBadge"></p><h2 id="profileName"></h2><p class="profile-rank" id="profileRank"></p>
       <div class="profile-details" id="profileDetails"></div>
     </article>
   </div>
-
   <script src="app.js"></script>
 </body>
 </html>
