@@ -32,11 +32,11 @@ INSERT_SQL = """
 INSERT INTO personnel (
     record_id, badge_number, rank, last_name, first_name, middle_name,
     suffix, camp, office, gender, classification, personnel_type,
-    duplicate_status, duplicate_type, created_at, updated_at
+    duplicate_status, duplicate_type, created_at, updated_at, source_order
 ) VALUES (
     :record_id, :badge_number, :rank, :last_name, :first_name, :middle_name,
     :suffix, :camp, :office, :gender, :classification, :personnel_type,
-    :duplicate_status, :duplicate_type, :created_at, :updated_at
+    :duplicate_status, :duplicate_type, :created_at, :updated_at, :source_order
 )
 ON CONFLICT(badge_number) DO UPDATE SET
     record_id=excluded.record_id,
@@ -53,7 +53,8 @@ ON CONFLICT(badge_number) DO UPDATE SET
     duplicate_status=excluded.duplicate_status,
     duplicate_type=excluded.duplicate_type,
     created_at=excluded.created_at,
-    updated_at=excluded.updated_at;
+    updated_at=excluded.updated_at,
+    source_order=excluded.source_order;
 """
 
 
@@ -110,7 +111,7 @@ def import_workbook(
     imported = 0
 
     with connect(db_path) as connection:
-        for values in rows:
+        for source_order, values in enumerate(rows, start=1):
             record = {field: None for field in EXPECTED_HEADERS.values()}
             for index, field in column_map.items():
                 if index >= len(values):
@@ -121,6 +122,7 @@ def import_workbook(
             if not record["badge_number"]:
                 continue
 
+            record["source_order"] = source_order
             connection.execute(INSERT_SQL, record)
             imported += 1
 
