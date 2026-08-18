@@ -7,7 +7,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
 DB_PATH = DATA_DIR / "personnel.db"
 
-SCHEMA = """
+BASE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS personnel (
     record_id TEXT,
     badge_number TEXT PRIMARY KEY,
@@ -33,7 +33,6 @@ CREATE INDEX IF NOT EXISTS idx_personnel_first_name ON personnel(first_name);
 CREATE INDEX IF NOT EXISTS idx_personnel_camp ON personnel(camp);
 CREATE INDEX IF NOT EXISTS idx_personnel_office ON personnel(office);
 CREATE INDEX IF NOT EXISTS idx_personnel_rank ON personnel(rank);
-CREATE INDEX IF NOT EXISTS idx_personnel_source_order ON personnel(source_order);
 """
 
 
@@ -52,12 +51,13 @@ def _migrate(connection: sqlite3.Connection) -> None:
     }
     if "source_order" not in columns:
         connection.execute("ALTER TABLE personnel ADD COLUMN source_order INTEGER")
-        connection.execute(
-            "CREATE INDEX IF NOT EXISTS idx_personnel_source_order ON personnel(source_order)"
-        )
+
+    connection.execute(
+        "CREATE INDEX IF NOT EXISTS idx_personnel_source_order ON personnel(source_order)"
+    )
 
 
 def initialize(db_path: Path | str = DB_PATH) -> None:
     with connect(db_path) as connection:
-        connection.executescript(SCHEMA)
+        connection.executescript(BASE_SCHEMA)
         _migrate(connection)
