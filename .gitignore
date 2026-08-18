@@ -1,0 +1,30 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+
+# Local runtime data
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+cache/
+logs/
+
+# Credentials / secrets
+credentials*.json
+service-account*.json
+*.pem
+
+# Local source exports
+*.xlsx
+*.xls
+
+# Packaging
+build/
+dist/
+*.spec
