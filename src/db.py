@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS personnel (
     duplicate_status TEXT,
     duplicate_type TEXT,
     created_at TEXT,
-    updated_at TEXT
+    updated_at TEXT,
+    source_order INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS idx_personnel_last_name ON personnel(last_name);
@@ -32,6 +33,7 @@ CREATE INDEX IF NOT EXISTS idx_personnel_first_name ON personnel(first_name);
 CREATE INDEX IF NOT EXISTS idx_personnel_camp ON personnel(camp);
 CREATE INDEX IF NOT EXISTS idx_personnel_office ON personnel(office);
 CREATE INDEX IF NOT EXISTS idx_personnel_rank ON personnel(rank);
+CREATE INDEX IF NOT EXISTS idx_personnel_source_order ON personnel(source_order);
 """
 
 
@@ -43,6 +45,19 @@ def connect(db_path: Path | str = DB_PATH) -> sqlite3.Connection:
     return connection
 
 
+def _migrate(connection: sqlite3.Connection) -> None:
+    columns = {
+        row["name"]
+        for row in connection.execute("PRAGMA table_info(personnel)").fetchall()
+    }
+    if "source_order" not in columns:
+        connection.execute("ALTER TABLE personnel ADD COLUMN source_order INTEGER")
+        connection.execute(
+            "CREATE INDEX IF NOT EXISTS idx_personnel_source_order ON personnel(source_order)"
+        )
+
+
 def initialize(db_path: Path | str = DB_PATH) -> None:
     with connect(db_path) as connection:
         connection.executescript(SCHEMA)
+        _migrate(connection)
