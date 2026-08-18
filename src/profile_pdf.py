@@ -9,23 +9,13 @@ from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
-from reportlab.platypus import (
-    KeepTogether,
-    Paragraph,
-    SimpleDocTemplate,
-    Spacer,
-    Table,
-    TableStyle,
-)
+from reportlab.platypus import KeepTogether, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 NAVY = colors.HexColor("#0B2E5D")
-GOLD = colors.HexColor("#D9A522")
 LIGHT_BLUE = colors.HexColor("#EEF3F7")
 GRID = colors.HexColor("#C8D2DC")
 TEXT = colors.HexColor("#24313D")
 MUTED = colors.HexColor("#687581")
-GREEN_BG = colors.HexColor("#DFF3DF")
-GREEN = colors.HexColor("#23743A")
 
 
 def _value(value: Any) -> str:
@@ -38,8 +28,8 @@ def _full_name(person: dict[str, Any]) -> str:
     return " ".join(str(part).strip() for part in parts if part and str(part).strip()) or "Unnamed Personnel"
 
 
-def _section_title(text: str) -> Table:
-    table = Table([[text]], colWidths=[178 * mm])
+def _section_title(text: str, width: float) -> Table:
+    table = Table([[text]], colWidths=[width])
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, -1), NAVY),
         ("TEXTCOLOR", (0, 0), (-1, -1), colors.white),
@@ -53,9 +43,9 @@ def _section_title(text: str) -> Table:
     return table
 
 
-def _info_table(rows: list[tuple[str, str]], width: float) -> Table:
+def _info_table(rows: list[tuple[str, str]], width: float, label_width: float = 34 * mm) -> Table:
     data = [[label, value] for label, value in rows]
-    table = Table(data, colWidths=[42 * mm, width - 42 * mm])
+    table = Table(data, colWidths=[label_width, width - label_width])
     table.setStyle(TableStyle([
         ("GRID", (0, 0), (-1, -1), 0.45, GRID),
         ("BACKGROUND", (0, 0), (0, -1), LIGHT_BLUE),
@@ -78,7 +68,7 @@ def _placeholder_table(headers: list[str], message: str, widths: list[float]) ->
         ("BACKGROUND", (0, 0), (-1, 0), NAVY),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, 0), 6.5),
+        ("FONTSIZE", (0, 0), (-1, 0), 6.3),
         ("ALIGN", (0, 0), (-1, 0), "CENTER"),
         ("SPAN", (0, 1), (-1, 1)),
         ("ALIGN", (0, 1), (-1, 1), "CENTER"),
@@ -87,8 +77,8 @@ def _placeholder_table(headers: list[str], message: str, widths: list[float]) ->
         ("GRID", (0, 0), (-1, -1), 0.45, GRID),
         ("TOPPADDING", (0, 0), (-1, -1), 6),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-        ("LEFTPADDING", (0, 0), (-1, -1), 4),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+        ("LEFTPADDING", (0, 0), (-1, -1), 3),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 3),
     ]))
     return table
 
@@ -96,6 +86,10 @@ def _placeholder_table(headers: list[str], message: str, widths: list[float]) ->
 def generate_profile_pdf(person: dict[str, Any], output_path: Path | str) -> Path:
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    page_width = 178 * mm
+    left_width = 58 * mm
+    right_width = 120 * mm
 
     doc = SimpleDocTemplate(
         str(output_path),
@@ -109,53 +103,19 @@ def generate_profile_pdf(person: dict[str, Any], output_path: Path | str) -> Pat
     )
 
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(
-        "ProfileTitle",
-        parent=styles["Title"],
-        fontName="Helvetica-Bold",
-        fontSize=24,
-        leading=27,
-        textColor=NAVY,
-        alignment=TA_CENTER,
-        spaceAfter=1 * mm,
-    )
-    subtitle_style = ParagraphStyle(
-        "ProfileSubtitle",
-        parent=styles["Normal"],
-        fontName="Helvetica",
-        fontSize=8.5,
-        leading=10,
-        textColor=NAVY,
-        alignment=TA_CENTER,
-    )
-    name_style = ParagraphStyle(
-        "Name",
-        parent=styles["Heading2"],
-        fontName="Helvetica-Bold",
-        fontSize=13,
-        leading=15,
-        textColor=NAVY,
-        alignment=TA_CENTER,
-        spaceAfter=2 * mm,
-    )
-    rank_style = ParagraphStyle(
-        "Rank",
-        parent=styles["Normal"],
-        fontName="Helvetica-Bold",
-        fontSize=8.5,
-        leading=10,
-        textColor=MUTED,
-        alignment=TA_CENTER,
-    )
+    title_style = ParagraphStyle("ProfileTitle", parent=styles["Title"], fontName="Helvetica-Bold", fontSize=24, leading=27, textColor=NAVY, alignment=TA_CENTER, spaceAfter=1 * mm)
+    subtitle_style = ParagraphStyle("ProfileSubtitle", parent=styles["Normal"], fontName="Helvetica", fontSize=8.5, leading=10, textColor=NAVY, alignment=TA_CENTER)
+    name_style = ParagraphStyle("Name", parent=styles["Heading2"], fontName="Helvetica-Bold", fontSize=13, leading=15, textColor=NAVY, alignment=TA_CENTER, spaceAfter=2 * mm)
+    rank_style = ParagraphStyle("Rank", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=8.5, leading=10, textColor=MUTED, alignment=TA_CENTER)
 
-    story = []
-    story.append(Paragraph("PERSONNEL PROFILE", title_style))
-    story.append(Paragraph("NEW BILIBID PRISON - PERSONNEL OFFICE & MOVEMENT TRACKING", subtitle_style))
-    story.append(Spacer(1, 3 * mm))
-    rule = Table([[""]], colWidths=[178 * mm], rowHeights=[1.2 * mm])
+    story = [
+        Paragraph("PERSONNEL PROFILE", title_style),
+        Paragraph("NEW BILIBID PRISON - PERSONNEL OFFICE & MOVEMENT TRACKING", subtitle_style),
+        Spacer(1, 3 * mm),
+    ]
+    rule = Table([[""]], colWidths=[page_width], rowHeights=[1.2 * mm])
     rule.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), NAVY)]))
-    story.append(rule)
-    story.append(Spacer(1, 5 * mm))
+    story.extend([rule, Spacer(1, 5 * mm)])
 
     initials = "".join((str(person.get(key) or "?").strip()[:1] for key in ("first_name", "last_name"))).upper()
     photo = Table([[initials]], colWidths=[46 * mm], rowHeights=[54 * mm])
@@ -177,14 +137,13 @@ def generate_profile_pdf(person: dict[str, Any], output_path: Path | str) -> Pat
         ("Gender", _value(person.get("gender"))),
         ("Camp", _value(person.get("camp"))),
     ]
-    identity_info = _info_table(identity_rows, 56 * mm)
     identity_block = [
         photo,
         Spacer(1, 3 * mm),
         Paragraph(_full_name(person).upper(), name_style),
         Paragraph(_value(person.get("rank")), rank_style),
         Spacer(1, 3 * mm),
-        identity_info,
+        _info_table(identity_rows, 54 * mm, 26 * mm),
     ]
 
     current_rows = [
@@ -193,20 +152,19 @@ def generate_profile_pdf(person: dict[str, Any], output_path: Path | str) -> Pat
         ("Rank", _value(person.get("rank"))),
         ("Status", "CURRENT"),
     ]
-    current = [_section_title("CURRENT OFFICE INFORMATION"), _info_table(current_rows, 116 * mm)]
-
-    movement = [
+    right_block = [
+        _section_title("CURRENT OFFICE INFORMATION", 116 * mm),
+        _info_table(current_rows, 116 * mm),
         Spacer(1, 4 * mm),
-        _section_title("OFFICE MOVEMENT HISTORY"),
+        _section_title("OFFICE MOVEMENT HISTORY", 116 * mm),
         _placeholder_table(
             ["#", "From Office", "To Office", "Position", "From Date", "To Date", "Remarks"],
             "No office movement records yet.",
-            [7 * mm, 23 * mm, 23 * mm, 23 * mm, 15 * mm, 15 * mm, 25 * mm],
+            [6 * mm, 20 * mm, 20 * mm, 19 * mm, 14 * mm, 14 * mm, 23 * mm],
         ),
     ]
 
-    right_block = current + movement
-    top = Table([[identity_block, right_block]], colWidths=[58 * mm, 120 * mm], hAlign="LEFT")
+    top = Table([[identity_block, right_block]], colWidths=[left_width, right_width], hAlign="LEFT")
     top.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("LEFTPADDING", (0, 0), (-1, -1), 0),
@@ -215,11 +173,16 @@ def generate_profile_pdf(person: dict[str, Any], output_path: Path | str) -> Pat
         ("TOPPADDING", (0, 0), (-1, -1), 0),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
     ]))
-    story.append(top)
-    story.append(Spacer(1, 5 * mm))
+    story.extend([top, Spacer(1, 5 * mm)])
 
-    memo = [_section_title("MEMO RECEIVED"), _placeholder_table(["Date Received", "Memo No.", "Subject / Description", "From"], "No memo records yet.", [24 * mm, 28 * mm, 45 * mm, 30 * mm])]
-    comm = [_section_title("COMMENDATIONS / RECOGNITIONS"), _placeholder_table(["Date Received", "Award / Title", "Presented By", "Remarks"], "No commendation records yet.", [24 * mm, 36 * mm, 31 * mm, 36 * mm])]
+    memo = [
+        _section_title("MEMO RECEIVED", 87 * mm),
+        _placeholder_table(["Date Received", "Memo No.", "Subject / Description", "From"], "No memo records yet.", [16 * mm, 18 * mm, 32 * mm, 21 * mm]),
+    ]
+    comm = [
+        _section_title("COMMENDATIONS / RECOGNITIONS", 87 * mm),
+        _placeholder_table(["Date Received", "Award / Title", "Presented By", "Remarks"], "No commendation records yet.", [16 * mm, 25 * mm, 20 * mm, 26 * mm]),
+    ]
     lower = Table([[memo, comm]], colWidths=[87 * mm, 87 * mm])
     lower.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -230,11 +193,9 @@ def generate_profile_pdf(person: dict[str, Any], output_path: Path | str) -> Pat
         ("TOPPADDING", (0, 0), (-1, -1), 0),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
     ]))
-    story.append(lower)
-    story.append(Spacer(1, 5 * mm))
+    story.extend([lower, Spacer(1, 5 * mm), _section_title("REMARKS", page_width)])
 
-    story.append(_section_title("REMARKS"))
-    remarks = Table([["No remarks recorded."]], colWidths=[178 * mm], rowHeights=[20 * mm])
+    remarks = Table([["No remarks recorded."]], colWidths=[page_width], rowHeights=[20 * mm])
     remarks.setStyle(TableStyle([
         ("BOX", (0, 0), (-1, -1), 0.45, GRID),
         ("TEXTCOLOR", (0, 0), (-1, -1), MUTED),
@@ -243,8 +204,7 @@ def generate_profile_pdf(person: dict[str, Any], output_path: Path | str) -> Pat
         ("LEFTPADDING", (0, 0), (-1, -1), 8),
         ("TOPPADDING", (0, 0), (-1, -1), 7),
     ]))
-    story.append(remarks)
-    story.append(Spacer(1, 5 * mm))
+    story.extend([remarks, Spacer(1, 5 * mm)])
 
     generated = datetime.now().strftime("%B %d, %Y %I:%M %p")
     footer = Table([["PREPARED BY: ____________________", f"DATE GENERATED: {generated}"]], colWidths=[89 * mm, 89 * mm])
