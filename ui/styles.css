@@ -34,7 +34,7 @@ button, input, select { font: inherit; }
 .sync-chip { width: 100%; color: #cbd3da; font-size: 13px; display: flex; align-items: center; gap: 8px; }
 .sync-chip span { width: 8px; height: 8px; background: #55c38a; border-radius: 999px; }
 
-.content { padding: 42px clamp(28px, 5vw, 72px) 64px; }
+.content { min-width: 0; padding: 42px clamp(28px, 5vw, 72px) 64px; }
 .topbar { display: flex; justify-content: space-between; gap: 30px; align-items: end; margin-bottom: 28px; }
 h1 { margin: 2px 0 7px; font-size: clamp(32px, 4vw, 48px); letter-spacing: -.04em; }
 h2 { margin: 0 0 4px; }
@@ -54,15 +54,64 @@ select, .secondary-button { border: 1px solid #d8dee4; border-radius: 11px; back
 .secondary-button:hover { background: #f4f6f8; }
 
 .results-heading { display: flex; justify-content: space-between; margin: 30px 0 14px; }
-.results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(285px, 1fr)); gap: 14px; }
-.person-card { background: white; border: 1px solid #e0e5e9; border-radius: 17px; padding: 17px; display: grid; grid-template-columns: 48px 1fr; gap: 13px; cursor: pointer; transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease; }
-.person-card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(25, 39, 52, .08); border-color: #c8d0d7; }
-.avatar { width: 48px; height: 48px; border-radius: 13px; display: grid; place-items: center; background: #fff1c7; color: #765000; font-weight: 850; }
-.person-name { font-weight: 800; line-height: 1.25; }
-.person-meta { color: #687581; font-size: 13px; margin-top: 5px; }
-.badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
-.badge { background: #f0f3f5; color: #4d5a66; padding: 4px 7px; border-radius: 7px; font-size: 11px; font-weight: 700; }
-.empty-state { grid-column: 1 / -1; padding: 56px 20px; text-align: center; color: #687581; background: white; border: 1px dashed #ccd4da; border-radius: 18px; }
+.table-shell {
+  overflow: auto;
+  max-height: calc(100vh - 365px);
+  min-height: 220px;
+  background: white;
+  border: 1px solid #dfe4e8;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(25, 39, 52, .045);
+}
+.personnel-table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+.personnel-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f7f9fa;
+  color: #596773;
+  border-bottom: 1px solid #dfe4e8;
+  padding: 12px 14px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.personnel-table th:nth-child(1) { width: 90px; }
+.personnel-table th:nth-child(2) { width: 90px; }
+.personnel-table th:nth-child(3) { width: 260px; }
+.personnel-table th:nth-child(4) { width: 115px; }
+.personnel-table th:nth-child(5) { width: 230px; }
+.personnel-table th:nth-child(6) { width: 150px; }
+.personnel-table th:nth-child(7) { width: 135px; }
+.person-row { cursor: pointer; outline: none; }
+.person-row td {
+  padding: 11px 14px;
+  border-bottom: 1px solid #edf0f2;
+  color: #34414c;
+  font-size: 14px;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.person-row:nth-child(even) td { background: #fbfcfd; }
+.person-row:hover td,
+.person-row:focus td { background: #fff7df; }
+.person-row:last-child td { border-bottom: 0; }
+.badge-cell { color: #687581 !important; font-variant-numeric: tabular-nums; }
+.rank-cell { color: #8a5d00 !important; font-weight: 800; }
+.name-cell { color: #17202a !important; font-weight: 750; }
+.empty-state { padding: 56px 20px; text-align: center; color: #687581; }
+.hidden { display: none !important; }
 
 .modal { position: fixed; inset: 0; display: grid; place-items: center; z-index: 20; }
 .modal.hidden { display: none; }
@@ -84,4 +133,5 @@ select, .secondary-button { border: 1px solid #d8dee4; border-radius: 11px; back
   .topbar { align-items: start; }
   .filters { grid-template-columns: 1fr 1fr; }
   .secondary-button { grid-column: span 2; }
+  .table-shell { max-height: none; }
 }
