@@ -51,7 +51,23 @@
         </div>
       </section>
 
-      <section id="results" class="results-grid"></section>
+      <section class="table-shell" aria-label="Personnel results">
+        <table class="personnel-table">
+          <thead>
+            <tr>
+              <th class="col-badge">Badge</th>
+              <th class="col-rank">Rank</th>
+              <th>Name</th>
+              <th>Camp</th>
+              <th>Office</th>
+              <th>Classification</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody id="results"></tbody>
+        </table>
+        <div id="emptyState" class="empty-state hidden">No personnel matched your search.</div>
+      </section>
     </main>
   </div>
 
