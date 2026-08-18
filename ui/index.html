@@ -37,11 +37,32 @@
           <textarea id="searchInput" rows="3" placeholder="Search one or multiple personnel — one name or badge per line..." autocomplete="off"></textarea>
         </div>
         <div class="search-hint">Tip: paste multiple names on separate lines. Results follow the same order as your search list.</div>
-        <div class="filters">
-          <select id="campFilter"><option value="">All camps</option></select>
-          <select id="officeFilter"><option value="">All offices</option></select>
-          <select id="rankFilter"><option value="">All ranks</option></select>
-          <button id="clearButton" class="secondary-button">Clear</button>
+
+        <div class="filter-bar">
+          <span class="filter-caption">Filters</span>
+
+          <label class="filter-chip" data-filter-chip for="campFilter">
+            <span class="filter-chip-label">Camp</span>
+            <select id="campFilter" aria-label="Camp filter">
+              <option value="">All</option>
+            </select>
+          </label>
+
+          <label class="filter-chip" data-filter-chip for="officeFilter">
+            <span class="filter-chip-label">Office</span>
+            <select id="officeFilter" aria-label="Office filter">
+              <option value="">All</option>
+            </select>
+          </label>
+
+          <label class="filter-chip" data-filter-chip for="rankFilter">
+            <span class="filter-chip-label">Rank</span>
+            <select id="rankFilter" aria-label="Rank filter">
+              <option value="">All</option>
+            </select>
+          </label>
+
+          <button id="clearButton" class="clear-chip" type="button">Clear all</button>
         </div>
       </section>
 
