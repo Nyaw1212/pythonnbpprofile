@@ -44,10 +44,13 @@ class PersonnelService:
         where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
         sql = f"""
             SELECT badge_number, rank, last_name, first_name, middle_name, suffix,
-                   camp, office, gender, classification, personnel_type
+                   camp, office, gender, classification, personnel_type, source_order
             FROM personnel
             {where}
-            ORDER BY last_name COLLATE NOCASE, first_name COLLATE NOCASE
+            ORDER BY
+                CASE WHEN source_order IS NULL THEN 1 ELSE 0 END,
+                source_order,
+                rowid
             LIMIT :limit
         """
 
