@@ -91,6 +91,11 @@ async function saveCurrentProfilePdf() {
   }
 }
 
+function printCurrentProfile() {
+  if (!state.currentBadge) return;
+  window.print();
+}
+
 function closeProfile() { $('profileModal').classList.add('hidden'); $('profileModal').setAttribute('aria-hidden', 'true'); document.body.classList.remove('modal-open'); state.currentBadge = null; }
 function scheduleSearch() { clearTimeout(state.timer); state.page = 1; state.timer = setTimeout(runSearch, 140); }
 
@@ -102,6 +107,7 @@ window.addEventListener('pywebviewready', async () => {
   $('nextPage').addEventListener('click', () => { if (state.page < state.totalPages) { state.page += 1; runSearch(); } });
   $('clearButton').addEventListener('click', async () => { state.camp = ''; state.office = ''; state.rank = ''; state.page = 1; await loadFilters(); runSearch(); });
   $('savePdfButton').addEventListener('click', saveCurrentProfilePdf);
+  $('printProfileButton').addEventListener('click', printCurrentProfile);
   document.querySelectorAll('[data-close-modal]').forEach((node) => node.addEventListener('click', closeProfile));
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeProfile(); });
 });
