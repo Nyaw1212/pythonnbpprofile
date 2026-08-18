@@ -1,5 +1,5 @@
 const $ = (id) => document.getElementById(id);
-const state = { timer: null, camp: '', office: '', rank: '', page: 1, pageSize: 25, totalPages: 1 };
+const state = { timer: null, camp: '', office: '', rank: '', page: 1, pageSize: 25, totalPages: 1, currentBadge: null };
 
 function fullName(person) {
   const middle = person.middle_name ? ` ${person.middle_name}` : '';
@@ -45,6 +45,7 @@ async function runSearch() {
 
 async function openProfile(badgeNumber) {
   const person = await pywebview.api.get_profile(String(badgeNumber)); if (!person) return;
+  state.currentBadge = String(badgeNumber);
   $('profileInitials').textContent = `${(person.first_name || '?')[0]}${(person.last_name || '?')[0]}`.toUpperCase();
   $('profileName').textContent = fullName(person).toUpperCase();
   $('profileRank').textContent = display(person.rank);
@@ -57,9 +58,40 @@ async function openProfile(badgeNumber) {
   $('profileOffice').textContent = display(person.office);
   $('profileCamp').textContent = display(person.camp);
   $('profileRankOffice').textContent = display(person.rank);
+  $('profileGeneratedDate').textContent = new Date().toLocaleString();
+  $('pdfStatus').textContent = '';
   $('profileModal').classList.remove('hidden'); $('profileModal').setAttribute('aria-hidden', 'false'); document.body.classList.add('modal-open');
 }
-function closeProfile() { $('profileModal').classList.add('hidden'); $('profileModal').setAttribute('aria-hidden', 'true'); document.body.classList.remove('modal-open'); }
+
+async function saveCurrentProfilePdf() {
+  if (!state.currentBadge) return;
+  const button = $('savePdfButton');
+  const status = $('pdfStatus');
+  button.disabled = true;
+  button.textContent = 'Saving…';
+  status.textContent = '';
+  try {
+    const result = await pywebview.api.save_profile_pdf(state.currentBadge);
+    if (result && result.ok) {
+      status.textContent = 'PDF saved';
+      status.className = 'pdf-status success';
+    } else if (result && result.cancelled) {
+      status.textContent = 'Save cancelled';
+      status.className = 'pdf-status';
+    } else {
+      status.textContent = (result && result.message) || 'Could not save PDF';
+      status.className = 'pdf-status error';
+    }
+  } catch (error) {
+    status.textContent = 'Could not save PDF';
+    status.className = 'pdf-status error';
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Save PDF';
+  }
+}
+
+function closeProfile() { $('profileModal').classList.add('hidden'); $('profileModal').setAttribute('aria-hidden', 'true'); document.body.classList.remove('modal-open'); state.currentBadge = null; }
 function scheduleSearch() { clearTimeout(state.timer); state.page = 1; state.timer = setTimeout(runSearch, 140); }
 
 window.addEventListener('pywebviewready', async () => {
@@ -69,6 +101,7 @@ window.addEventListener('pywebviewready', async () => {
   $('prevPage').addEventListener('click', () => { if (state.page > 1) { state.page -= 1; runSearch(); } });
   $('nextPage').addEventListener('click', () => { if (state.page < state.totalPages) { state.page += 1; runSearch(); } });
   $('clearButton').addEventListener('click', async () => { state.camp = ''; state.office = ''; state.rank = ''; state.page = 1; await loadFilters(); runSearch(); });
+  $('savePdfButton').addEventListener('click', saveCurrentProfilePdf);
   document.querySelectorAll('[data-close-modal]').forEach((node) => node.addEventListener('click', closeProfile));
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeProfile(); });
 });
