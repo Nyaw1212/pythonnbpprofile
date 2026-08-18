@@ -7,15 +7,18 @@ function fullName(person) {
   return `${person.first_name || ''}${middle} ${person.last_name || ''}${suffix}`.replace(/\s+/g, ' ').trim();
 }
 
-function initials(person) {
-  return `${(person.first_name || '?')[0]}${(person.last_name || '?')[0]}`.toUpperCase();
-}
-
 function option(value) {
   const node = document.createElement('option');
   node.value = value;
   node.textContent = value;
   return node;
+}
+
+function cell(value, className = '') {
+  const td = document.createElement('td');
+  td.textContent = value || '—';
+  if (className) td.className = className;
+  return td;
 }
 
 async function loadFilters() {
@@ -43,29 +46,42 @@ async function runSearch() {
     ? 'Showing first 100 matches'
     : `${results.length} match${results.length === 1 ? '' : 'es'}`;
 
-  const container = $('results');
-  container.innerHTML = '';
+  const tbody = $('results');
+  const emptyState = $('emptyState');
+  tbody.innerHTML = '';
 
   if (!results.length) {
-    container.innerHTML = '<div class="empty-state">No personnel matched your search.</div>';
+    emptyState.classList.remove('hidden');
     return;
   }
 
+  emptyState.classList.add('hidden');
+
   results.forEach((person) => {
-    const card = document.createElement('article');
-    card.className = 'person-card';
-    card.innerHTML = `
-      <div class="avatar">${initials(person)}</div>
-      <div>
-        <div class="person-name">${person.rank ? `${person.rank} ` : ''}${fullName(person)}</div>
-        <div class="person-meta">Badge ${person.badge_number}${person.office ? ` • ${person.office}` : ''}</div>
-        <div class="badges">
-          ${person.camp ? `<span class="badge">${person.camp}</span>` : ''}
-          ${person.classification ? `<span class="badge">${person.classification}</span>` : ''}
-        </div>
-      </div>`;
-    card.addEventListener('click', () => openProfile(person.badge_number));
-    container.appendChild(card);
+    const row = document.createElement('tr');
+    row.className = 'person-row';
+    row.tabIndex = 0;
+    row.setAttribute('role', 'button');
+    row.setAttribute('aria-label', `Open profile for ${fullName(person)}`);
+
+    row.appendChild(cell(String(person.badge_number || ''), 'badge-cell'));
+    row.appendChild(cell(person.rank, 'rank-cell'));
+    row.appendChild(cell(fullName(person), 'name-cell'));
+    row.appendChild(cell(person.camp));
+    row.appendChild(cell(person.office));
+    row.appendChild(cell(person.classification));
+    row.appendChild(cell(person.personnel_type));
+
+    const open = () => openProfile(person.badge_number);
+    row.addEventListener('click', open);
+    row.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        open();
+      }
+    });
+
+    tbody.appendChild(row);
   });
 }
 
@@ -73,7 +89,8 @@ async function openProfile(badgeNumber) {
   const person = await pywebview.api.get_profile(String(badgeNumber));
   if (!person) return;
 
-  $('profileInitials').textContent = initials(person);
+  const initials = `${(person.first_name || '?')[0]}${(person.last_name || '?')[0]}`.toUpperCase();
+  $('profileInitials').textContent = initials;
   $('profileBadge').textContent = `BADGE ${person.badge_number}`;
   $('profileName').textContent = fullName(person);
   $('profileRank').textContent = person.rank || 'No rank recorded';
