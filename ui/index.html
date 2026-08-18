@@ -17,6 +17,8 @@
       <div class="sync-chip"><span></span> Local database</div>
 
       <div class="sidebar-filters">
+        <button id="clearButton" class="sidebar-clear" type="button">Clear filters</button>
+
         <div class="sidebar-filter-section">
           <div class="sidebar-filter-heading">Camp</div>
           <div id="campChips" class="sidebar-chip-list"></div>
@@ -31,8 +33,6 @@
           <div class="sidebar-filter-heading">Rank</div>
           <div id="rankChips" class="sidebar-chip-list scroll-chip-list"></div>
         </div>
-
-        <button id="clearButton" class="sidebar-clear" type="button">Clear filters</button>
       </div>
     </aside>
 
@@ -54,14 +54,35 @@
         <div class="search-hint">Paste multiple names on separate lines.</div>
       </section>
 
-      <section class="results-heading"><div><h2>Results</h2><p id="resultCount" class="muted">Loading...</p></div></section>
+      <section class="results-heading">
+        <div><h2>Results</h2><p id="resultCount" class="muted">Loading...</p></div>
+      </section>
 
-      <section class="table-shell" aria-label="Personnel results">
-        <table class="personnel-table">
-          <thead><tr><th>Badge</th><th>Rank</th><th>Name</th><th>Camp</th><th>Office</th><th>Classification</th><th>Type</th></tr></thead>
-          <tbody id="results"></tbody>
-        </table>
-        <div id="emptyState" class="empty-state hidden">No personnel matched your search.</div>
+      <section class="table-card" aria-label="Personnel results">
+        <div class="table-shell">
+          <table class="personnel-table">
+            <thead><tr><th>Badge</th><th>Rank</th><th>Name</th><th>Camp</th><th>Office</th><th>Classification</th><th>Type</th></tr></thead>
+            <tbody id="results"></tbody>
+          </table>
+          <div id="emptyState" class="empty-state hidden">No personnel matched your search.</div>
+        </div>
+
+        <footer class="pagination-bar">
+          <div id="pageSummary" class="page-summary">Showing 0 results</div>
+          <div class="pagination-controls">
+            <label class="rows-control">Rows per page
+              <select id="pageSize">
+                <option value="10">10</option>
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </label>
+            <button id="prevPage" class="page-nav" type="button">‹ Prev</button>
+            <div id="pageNumbers" class="page-numbers"></div>
+            <button id="nextPage" class="page-nav" type="button">Next ›</button>
+          </div>
+        </footer>
       </section>
     </main>
   </div>
