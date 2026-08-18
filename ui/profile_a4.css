@@ -33,19 +33,29 @@
   gap: 8px;
 }
 
-.save-pdf-button {
-  border: 1px solid #d99d10;
+.save-pdf-button,
+.print-profile-button {
   border-radius: 8px;
-  background: #f0b429;
-  color: #17202a;
   padding: 7px 13px;
   font-size: 12px;
   font-weight: 850;
   cursor: pointer;
 }
 
+.save-pdf-button {
+  border: 1px solid #d99d10;
+  background: #f0b429;
+  color: #17202a;
+}
 .save-pdf-button:hover:not(:disabled) { background: #f6c54b; }
 .save-pdf-button:disabled { opacity: .65; cursor: wait; }
+
+.print-profile-button {
+  border: 1px solid #5c6a76;
+  background: #26333e;
+  color: #eef3f7;
+}
+.print-profile-button:hover { background: #33424e; }
 
 .pdf-status {
   max-width: 220px;
@@ -151,4 +161,61 @@
   .profile-photo-large { width: 38mm; height: 46mm; }
   .profile-sheet-header h2 { font-size: 21px; }
   .profile-lower-grid { grid-template-columns: 1fr; }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html, body {
+    width: 210mm;
+    height: 297mm;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    overflow: visible !important;
+  }
+
+  body > .app-shell,
+  .profile-toolbar,
+  .modal-backdrop {
+    display: none !important;
+  }
+
+  #profileModal,
+  .profile-modal-frame,
+  .profile-sheet {
+    position: static !important;
+    display: block !important;
+    width: 210mm !important;
+    max-width: 210mm !important;
+    min-height: 297mm !important;
+    max-height: none !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: white !important;
+  }
+
+  #profileModal {
+    inset: auto !important;
+    padding: 0 !important;
+  }
+
+  .profile-sheet {
+    padding: 12mm 12mm 11mm !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .profile-section,
+  .profile-main-grid,
+  .profile-lower-grid,
+  .profile-footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 }
