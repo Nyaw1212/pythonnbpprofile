@@ -32,10 +32,11 @@
       </header>
 
       <section class="search-panel">
-        <div class="search-box">
+        <div class="search-box multiline-search">
           <span class="search-icon">⌕</span>
-          <input id="searchInput" type="search" placeholder="Search name, badge number, or rank..." autocomplete="off">
+          <textarea id="searchInput" rows="3" placeholder="Search one or multiple personnel — one name or badge per line..." autocomplete="off"></textarea>
         </div>
+        <div class="search-hint">Tip: paste multiple names on separate lines. Results follow the same order as your search list.</div>
         <div class="filters">
           <select id="campFilter"><option value="">All camps</option></select>
           <select id="officeFilter"><option value="">All offices</option></select>
