@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from math import ceil
 from typing import Any
 
 from .db import DB_PATH, connect, initialize
@@ -19,7 +20,7 @@ class PersonnelService:
         limit: int,
     ) -> list[dict[str, Any]]:
         conditions = []
-        params: dict[str, Any] = {"limit": max(1, min(int(limit), 500))}
+        params: dict[str, Any] = {"limit": max(1, min(int(limit), 10000))}
 
         query = (query or "").strip()
         if query:
@@ -66,7 +67,7 @@ class PersonnelService:
         rank: str = "",
         limit: int = 100,
     ) -> list[dict[str, Any]]:
-        max_results = max(1, min(int(limit), 500))
+        max_results = max(1, min(int(limit), 10000))
         terms = [line.strip() for line in (query or "").splitlines() if line.strip()]
 
         if not terms:
@@ -91,6 +92,33 @@ class PersonnelService:
                     break
 
         return results
+
+    def search_paged(
+        self,
+        query: str = "",
+        camp: str = "",
+        office: str = "",
+        rank: str = "",
+        page: int = 1,
+        page_size: int = 25,
+    ) -> dict[str, Any]:
+        size = max(5, min(int(page_size), 200))
+        all_results = self.search(query, camp, office, rank, 10000)
+        total = len(all_results)
+        total_pages = max(1, ceil(total / size)) if total else 1
+        current_page = max(1, min(int(page), total_pages))
+        start = (current_page - 1) * size
+        rows = all_results[start:start + size]
+
+        return {
+            "rows": rows,
+            "total": total,
+            "page": current_page,
+            "page_size": size,
+            "total_pages": total_pages,
+            "start": start + 1 if total else 0,
+            "end": start + len(rows),
+        }
 
     def get_profile(self, badge_number: str) -> dict[str, Any] | None:
         with connect(self.db_path) as connection:
