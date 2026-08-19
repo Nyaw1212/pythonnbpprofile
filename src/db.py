@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS personnel (
     duplicate_type TEXT,
     created_at TEXT,
     updated_at TEXT,
-    source_order INTEGER
+    source_order INTEGER,
+    drive_file_id TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_personnel_last_name ON personnel(last_name);
@@ -51,6 +52,8 @@ def _migrate(connection: sqlite3.Connection) -> None:
     }
     if "source_order" not in columns:
         connection.execute("ALTER TABLE personnel ADD COLUMN source_order INTEGER")
+    if "drive_file_id" not in columns:
+        connection.execute("ALTER TABLE personnel ADD COLUMN drive_file_id TEXT")
 
     connection.execute(
         "CREATE INDEX IF NOT EXISTS idx_personnel_source_order ON personnel(source_order)"
