@@ -11,7 +11,9 @@
   <div class="app-shell">
     <aside class="sidebar">
       <div class="sidebar-brand"><div class="brand-mark">NBP</div><div><div class="brand-title">Personnel</div><div class="brand-subtitle">Lookup</div></div></div>
-      <div class="sync-chip"><span></span> Local database</div>
+      <div class="sync-chip"><span id="syncDot"></span><span id="syncStatus">Local database</span></div>
+      <button id="syncButton" class="sidebar-sync" type="button">↻ Sync Google Sheet</button>
+      <div id="syncMeta" class="sync-meta">Uses local data when offline.</div>
       <div class="sidebar-filters">
         <button id="clearButton" class="sidebar-clear" type="button">Clear filters</button>
         <div class="sidebar-filter-section"><div class="sidebar-filter-heading">Camp</div><div id="campChips" class="sidebar-chip-list"></div></div>
@@ -21,84 +23,14 @@
     </aside>
 
     <main class="content">
-      <header class="topbar">
-        <div><p class="eyebrow">NEW BILIBID PRISON</p><h1>Personnel Lookup</h1><p class="muted">Fast local search using the synced personnel database.</p></div>
-        <div class="stat-card"><span id="totalPersonnel">0</span><small>Personnel</small></div>
-      </header>
+      <header class="topbar"><div><p class="eyebrow">NEW BILIBID PRISON</p><h1>Personnel Lookup</h1><p class="muted">Fast local search using the synced personnel database.</p></div><div class="stat-card"><span id="totalPersonnel">0</span><small>Personnel</small></div></header>
       <section class="search-panel compact-search-panel"><div class="search-box multiline-search"><span class="search-icon">⌕</span><textarea id="searchInput" rows="3" placeholder="Search names or badges — one per line..." autocomplete="off"></textarea></div><div class="search-hint">Paste multiple names on separate lines.</div></section>
       <section class="results-heading"><div><h2>Results</h2><p id="resultCount" class="muted">Loading...</p></div></section>
-      <section class="table-card" aria-label="Personnel results">
-        <div class="table-shell"><table class="personnel-table"><thead><tr><th>Badge</th><th>Rank</th><th>Name</th><th>Camp</th><th>Office</th><th>Classification</th><th>Type</th></tr></thead><tbody id="results"></tbody></table><div id="emptyState" class="empty-state hidden">No personnel matched your search.</div></div>
-        <footer class="pagination-bar"><div id="pageSummary" class="page-summary">Showing 0 results</div><div class="pagination-controls"><label class="rows-control">Rows per page <select id="pageSize"><option value="10">10</option><option value="25" selected>25</option><option value="50">50</option><option value="100">100</option></select></label><button id="prevPage" class="page-nav" type="button">‹ Prev</button><div id="pageNumbers" class="page-numbers"></div><button id="nextPage" class="page-nav" type="button">Next ›</button></div></footer>
-      </section>
+      <section class="table-card" aria-label="Personnel results"><div class="table-shell"><table class="personnel-table"><thead><tr><th>Badge</th><th>Rank</th><th>Name</th><th>Camp</th><th>Office</th><th>Classification</th><th>Type</th></tr></thead><tbody id="results"></tbody></table><div id="emptyState" class="empty-state hidden">No personnel matched your search.</div></div><footer class="pagination-bar"><div id="pageSummary" class="page-summary">Showing 0 results</div><div class="pagination-controls"><label class="rows-control">Rows per page <select id="pageSize"><option value="10">10</option><option value="25" selected>25</option><option value="50">50</option><option value="100">100</option></select></label><button id="prevPage" class="page-nav" type="button">‹ Prev</button><div id="pageNumbers" class="page-numbers"></div><button id="nextPage" class="page-nav" type="button">Next ›</button></div></footer></section>
     </main>
   </div>
 
-  <div id="profileModal" class="modal hidden" aria-hidden="true">
-    <div class="modal-backdrop" data-close-modal></div>
-    <div class="profile-modal-frame">
-      <div class="profile-toolbar">
-        <span>A4 Personnel Profile</span>
-        <div class="profile-toolbar-actions">
-          <span id="pdfStatus" class="pdf-status"></span>
-          <button id="printProfileButton" class="print-profile-button" type="button">Print</button>
-          <button id="savePdfButton" class="save-pdf-button" type="button">Save PDF</button>
-          <button class="close-button profile-close" data-close-modal aria-label="Close">×</button>
-        </div>
-      </div>
-
-      <article class="profile-sheet">
-        <header class="profile-sheet-header">
-          <div class="profile-emblem">NBP</div>
-          <div><h2>PERSONNEL PROFILE</h2><p>Personnel Office & Movement Tracking</p></div>
-        </header>
-
-        <div class="profile-main-grid">
-          <aside class="profile-identity">
-            <div class="profile-photo-large" id="profilePhotoBox">
-              <img id="profilePhoto" alt="Personnel photo" class="profile-photo-image hidden">
-              <span id="profileInitials">--</span>
-            </div>
-            <h3 id="profileName">—</h3>
-            <div id="profileRank" class="identity-rank">—</div>
-            <div class="identity-list">
-              <div><span>Badge Number</span><strong id="profileBadgeValue">—</strong></div>
-              <div><span>Record ID</span><strong id="profileRecordId">—</strong></div>
-              <div><span>Classification</span><strong id="profileClassification">—</strong></div>
-              <div><span>Personnel Type</span><strong id="profileType">—</strong></div>
-              <div><span>Gender</span><strong id="profileGender">—</strong></div>
-              <div><span>Camp</span><strong id="profileCampSide">—</strong></div>
-            </div>
-          </aside>
-
-          <div class="profile-body">
-            <section class="profile-section">
-              <div class="profile-section-title">CURRENT OFFICE INFORMATION</div>
-              <div class="office-info-grid">
-                <div><span>Office</span><strong id="profileOffice">—</strong></div>
-                <div><span>Camp</span><strong id="profileCamp">—</strong></div>
-                <div><span>Rank</span><strong id="profileRankOffice">—</strong></div>
-                <div><span>Status</span><strong class="current-status">CURRENT</strong></div>
-              </div>
-            </section>
-
-            <section class="profile-section">
-              <div class="profile-section-title">OFFICE MOVEMENT HISTORY</div>
-              <div class="profile-table-wrap"><table class="profile-table"><thead><tr><th>#</th><th>From Office</th><th>To Office</th><th>Position</th><th>From Date</th><th>To Date</th><th>Remarks</th></tr></thead><tbody><tr class="placeholder-row"><td colspan="7">No office movement records yet.</td></tr></tbody></table></div>
-            </section>
-          </div>
-        </div>
-
-        <div class="profile-lower-grid">
-          <section class="profile-section"><div class="profile-section-title">MEMO RECEIVED</div><div class="section-placeholder">No memo records yet.</div></section>
-          <section class="profile-section"><div class="profile-section-title">COMMENDATIONS / RECOGNITIONS</div><div class="section-placeholder">No commendation records yet.</div></section>
-        </div>
-
-        <section class="profile-section remarks-section"><div class="profile-section-title">REMARKS</div><div class="section-placeholder">No remarks recorded.</div></section>
-        <footer class="profile-footer"><span>PREPARED BY: ____________________</span><span>DATE GENERATED: <span id="profileGeneratedDate">—</span></span></footer>
-      </article>
-    </div>
-  </div>
+  <div id="profileModal" class="modal hidden" aria-hidden="true"><div class="modal-backdrop" data-close-modal></div><div class="profile-modal-frame"><div class="profile-toolbar"><span>A4 Personnel Profile</span><div class="profile-toolbar-actions"><span id="pdfStatus" class="pdf-status"></span><button id="printProfileButton" class="print-profile-button" type="button">Print</button><button id="savePdfButton" class="save-pdf-button" type="button">Save PDF</button><button class="close-button profile-close" data-close-modal aria-label="Close">×</button></div></div><article class="profile-sheet"><header class="profile-sheet-header"><div class="profile-emblem">NBP</div><div><h2>PERSONNEL PROFILE</h2><p>Personnel Office & Movement Tracking</p></div></header><div class="profile-main-grid"><aside class="profile-identity"><div class="profile-photo-large" id="profilePhotoBox"><img id="profilePhoto" alt="Personnel photo" class="profile-photo-image hidden"><span id="profileInitials">--</span></div><h3 id="profileName">—</h3><div id="profileRank" class="identity-rank">—</div><div class="identity-list"><div><span>Badge Number</span><strong id="profileBadgeValue">—</strong></div><div><span>Record ID</span><strong id="profileRecordId">—</strong></div><div><span>Classification</span><strong id="profileClassification">—</strong></div><div><span>Personnel Type</span><strong id="profileType">—</strong></div><div><span>Gender</span><strong id="profileGender">—</strong></div><div><span>Camp</span><strong id="profileCampSide">—</strong></div></div></aside><div class="profile-body"><section class="profile-section"><div class="profile-section-title">CURRENT OFFICE INFORMATION</div><div class="office-info-grid"><div><span>Office</span><strong id="profileOffice">—</strong></div><div><span>Camp</span><strong id="profileCamp">—</strong></div><div><span>Rank</span><strong id="profileRankOffice">—</strong></div><div><span>Status</span><strong class="current-status">CURRENT</strong></div></div></section><section class="profile-section"><div class="profile-section-title">OFFICE MOVEMENT HISTORY</div><div class="profile-table-wrap"><table class="profile-table"><thead><tr><th>#</th><th>From Office</th><th>To Office</th><th>Position</th><th>From Date</th><th>To Date</th><th>Remarks</th></tr></thead><tbody><tr class="placeholder-row"><td colspan="7">No office movement records yet.</td></tr></tbody></table></div></section></div></div><div class="profile-lower-grid"><section class="profile-section"><div class="profile-section-title">MEMO RECEIVED</div><div class="section-placeholder">No memo records yet.</div></section><section class="profile-section"><div class="profile-section-title">COMMENDATIONS / RECOGNITIONS</div><div class="section-placeholder">No commendation records yet.</div></section></div><section class="profile-section remarks-section"><div class="profile-section-title">REMARKS</div><div class="section-placeholder">No remarks recorded.</div></section><footer class="profile-footer"><span>PREPARED BY: ____________________</span><span>DATE GENERATED: <span id="profileGeneratedDate">—</span></span></footer></article></div></div>
   <script src="app.js"></script>
 </body>
 </html>
