@@ -43,10 +43,34 @@ async function runSearch() {
     const open = () => openProfile(person.badge_number); row.addEventListener('click', open); row.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } }); tbody.appendChild(row); });
 }
 
+function setProfilePhoto(person) {
+  const initials = `${(person.first_name || '?')[0]}${(person.last_name || '?')[0]}`.toUpperCase();
+  const image = $('profilePhoto');
+  const initialsNode = $('profileInitials');
+  initialsNode.textContent = initials;
+  initialsNode.classList.remove('hidden');
+  image.classList.add('hidden');
+  image.removeAttribute('src');
+  image.onerror = null;
+
+  const fileId = String(person.drive_file_id || '').trim();
+  if (!fileId) return;
+
+  image.onload = () => {
+    image.classList.remove('hidden');
+    initialsNode.classList.add('hidden');
+  };
+  image.onerror = () => {
+    image.classList.add('hidden');
+    initialsNode.classList.remove('hidden');
+  };
+  image.src = `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w1000`;
+}
+
 async function openProfile(badgeNumber) {
   const person = await pywebview.api.get_profile(String(badgeNumber)); if (!person) return;
   state.currentBadge = String(badgeNumber);
-  $('profileInitials').textContent = `${(person.first_name || '?')[0]}${(person.last_name || '?')[0]}`.toUpperCase();
+  setProfilePhoto(person);
   $('profileName').textContent = fullName(person).toUpperCase();
   $('profileRank').textContent = display(person.rank);
   $('profileBadgeValue').textContent = display(person.badge_number);
