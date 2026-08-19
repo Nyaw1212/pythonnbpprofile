@@ -9,7 +9,7 @@ from urllib.request import Request, urlopen
 from openpyxl import Workbook
 
 from .db import DB_PATH, connect, initialize
-from .import_excel import EXPECTED_HEADERS, INSERT_SQL, normalize, normalize_badge
+from .import_excel import EXPECTED_HEADERS, INSERT_SQL, normalize, normalize_badge, normalize_drive_file_id
 
 SPREADSHEET_ID = "1SMbMfK-2T5LroHcycjUbf__pwAYQ6wtUHQocl2EoxmU"
 SHEET_GID = "0"
@@ -18,10 +18,7 @@ SNAPSHOT_PATH = ROOT_DIR / "NBPattendance.xlsx"
 
 
 def _download_csv() -> list[list[str]]:
-    url = (
-        f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/export"
-        f"?format=csv&gid={SHEET_GID}"
-    )
+    url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/export?format=csv&gid={SHEET_GID}"
     request = Request(url, headers={"User-Agent": "NBPPersonnelLookup/1.0"})
     with urlopen(request, timeout=30) as response:
         text = response.read().decode("utf-8-sig")
@@ -42,15 +39,9 @@ def sync_google_sheet(db_path: Path | str = DB_PATH) -> dict:
     if not rows:
         raise ValueError("Google Sheet returned no data.")
 
-    raw_headers = rows[0]
-    headers = [str(value).strip().upper() for value in raw_headers]
-    column_map = {
-        index: EXPECTED_HEADERS[header]
-        for index, header in enumerate(headers)
-        if header in EXPECTED_HEADERS
-    }
-    required = {"badge_number", "last_name", "first_name"}
-    missing = sorted(required - set(column_map.values()))
+    headers = [str(value).strip().upper() for value in rows[0]]
+    column_map = {index: EXPECTED_HEADERS[header] for index, header in enumerate(headers) if header in EXPECTED_HEADERS}
+    missing = sorted({"badge_number", "last_name", "first_name"} - set(column_map.values()))
     if missing:
         raise ValueError(f"Google Sheet is missing required columns: {', '.join(missing)}")
 
@@ -63,7 +54,12 @@ def sync_google_sheet(db_path: Path | str = DB_PATH) -> dict:
                 if index >= len(values):
                     continue
                 value = values[index]
-                record[field] = normalize_badge(value) if field == "badge_number" else normalize(value)
+                if field == "badge_number":
+                    record[field] = normalize_badge(value)
+                elif field == "drive_file_id":
+                    record[field] = normalize_drive_file_id(value)
+                else:
+                    record[field] = normalize(value)
             if not record["badge_number"]:
                 continue
             record["source_order"] = source_order
@@ -71,9 +67,4 @@ def sync_google_sheet(db_path: Path | str = DB_PATH) -> dict:
             imported += 1
 
     _write_snapshot(rows)
-    return {
-        "ok": True,
-        "count": imported,
-        "synced_at": datetime.now().isoformat(timespec="seconds"),
-        "snapshot": str(SNAPSHOT_PATH),
-    }
+    return {"ok": True, "count": imported, "synced_at": datetime.now().isoformat(timespec="seconds"), "snapshot": str(SNAPSHOT_PATH)}
