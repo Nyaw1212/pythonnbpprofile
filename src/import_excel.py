@@ -26,17 +26,21 @@ EXPECTED_HEADERS = {
     "DUPLICATE TYPE": "duplicate_type",
     "CREATED AT": "created_at",
     "UPDATED AT": "updated_at",
+    "DRIVEFILEID": "drive_file_id",
+    "DRIVE FILE ID": "drive_file_id",
 }
 
 INSERT_SQL = """
 INSERT INTO personnel (
     record_id, badge_number, rank, last_name, first_name, middle_name,
     suffix, camp, office, gender, classification, personnel_type,
-    duplicate_status, duplicate_type, created_at, updated_at, source_order
+    duplicate_status, duplicate_type, created_at, updated_at, source_order,
+    drive_file_id
 ) VALUES (
     :record_id, :badge_number, :rank, :last_name, :first_name, :middle_name,
     :suffix, :camp, :office, :gender, :classification, :personnel_type,
-    :duplicate_status, :duplicate_type, :created_at, :updated_at, :source_order
+    :duplicate_status, :duplicate_type, :created_at, :updated_at, :source_order,
+    :drive_file_id
 )
 ON CONFLICT(badge_number) DO UPDATE SET
     record_id=excluded.record_id,
@@ -54,7 +58,8 @@ ON CONFLICT(badge_number) DO UPDATE SET
     duplicate_type=excluded.duplicate_type,
     created_at=excluded.created_at,
     updated_at=excluded.updated_at,
-    source_order=excluded.source_order;
+    source_order=excluded.source_order,
+    drive_file_id=excluded.drive_file_id;
 """
 
 
