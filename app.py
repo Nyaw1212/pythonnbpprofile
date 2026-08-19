@@ -7,6 +7,7 @@ from pathlib import Path
 import webview
 
 from src.db import DB_PATH
+from src.google_sheet_sync import sync_google_sheet
 from src.personnel_service import PersonnelService
 from src.profile_pdf import generate_profile_pdf
 
@@ -37,6 +38,12 @@ class Api:
 
     def get_stats(self):
         return self.personnel.stats()
+
+    def sync_google_sheet(self):
+        try:
+            return sync_google_sheet(DB_PATH)
+        except Exception as exc:
+            return {"ok": False, "message": str(exc)}
 
     def save_profile_pdf(self, badge_number):
         person = self.personnel.get_profile(str(badge_number))
