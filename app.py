@@ -9,6 +9,7 @@ import webview
 from src.db import DB_PATH
 from src.google_sheet_sync import sync_google_sheet
 from src.personnel_service import PersonnelService
+from src.photo_service import get_drive_photo_data_url
 from src.profile_pdf import generate_profile_pdf
 
 ROOT_DIR = Path(__file__).resolve().parent
@@ -32,6 +33,15 @@ class Api:
 
     def get_profile(self, badge_number):
         return self.personnel.get_profile(str(badge_number))
+
+    def get_profile_photo(self, badge_number):
+        person = self.personnel.get_profile(str(badge_number))
+        if not person:
+            return {"ok": False, "message": "Personnel record not found."}
+        return get_drive_photo_data_url(
+            person.get("drive_file_id"),
+            cache_key=str(person.get("badge_number") or badge_number),
+        )
 
     def get_filters(self):
         return self.personnel.filters()
