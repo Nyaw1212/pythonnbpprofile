@@ -51,20 +51,39 @@ function setProfilePhoto(person) {
   initialsNode.classList.remove('hidden');
   image.classList.add('hidden');
   image.removeAttribute('src');
+  image.onload = null;
   image.onerror = null;
 
   const fileId = String(person.drive_file_id || '').trim();
   if (!fileId) return;
 
+  const encoded = encodeURIComponent(fileId);
+  const sources = [
+    `https://drive.google.com/thumbnail?id=${encoded}&sz=w1000`,
+    `https://drive.google.com/uc?export=view&id=${encoded}`,
+    `https://lh3.googleusercontent.com/d/${encoded}=w1000`
+  ];
+
+  let sourceIndex = 0;
+  const tryNextSource = () => {
+    if (sourceIndex >= sources.length) {
+      image.classList.add('hidden');
+      initialsNode.classList.remove('hidden');
+      return;
+    }
+    image.src = sources[sourceIndex++];
+  };
+
   image.onload = () => {
+    if (!image.naturalWidth || !image.naturalHeight) {
+      tryNextSource();
+      return;
+    }
     image.classList.remove('hidden');
     initialsNode.classList.add('hidden');
   };
-  image.onerror = () => {
-    image.classList.add('hidden');
-    initialsNode.classList.remove('hidden');
-  };
-  image.src = `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w1000`;
+  image.onerror = tryNextSource;
+  tryNextSource();
 }
 
 async function openProfile(badgeNumber) {
@@ -115,11 +134,7 @@ async function saveCurrentProfilePdf() {
   }
 }
 
-function printCurrentProfile() {
-  if (!state.currentBadge) return;
-  window.print();
-}
-
+function printCurrentProfile() { if (!state.currentBadge) return; window.print(); }
 function closeProfile() { $('profileModal').classList.add('hidden'); $('profileModal').setAttribute('aria-hidden', 'true'); document.body.classList.remove('modal-open'); state.currentBadge = null; }
 function scheduleSearch() { clearTimeout(state.timer); state.page = 1; state.timer = setTimeout(runSearch, 140); }
 
