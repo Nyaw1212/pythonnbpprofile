@@ -1,19 +1,18 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 from pathlib import Path
+from PyInstaller.building.datastruct import Tree
 
 project_root = Path(SPECPATH)
 
-# Build as a Windows onedir application.  The UI and current local data are
-# included so the packaged app can start immediately and still work offline.
+ui_tree = Tree(str(project_root / 'ui'), prefix='ui')
+data_tree = Tree(str(project_root / 'data'), prefix='data') if (project_root / 'data').exists() else []
+
 a = Analysis(
     ['app.py'],
     pathex=[str(project_root)],
     binaries=[],
-    datas=[
-        (str(project_root / 'ui'), 'ui'),
-        (str(project_root / 'data'), 'data'),
-    ],
+    datas=[ui_tree, data_tree],
     hiddenimports=[
         'webview',
         'webview.platforms.edgechromium',
