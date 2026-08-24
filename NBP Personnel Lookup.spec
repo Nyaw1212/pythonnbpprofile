@@ -5,14 +5,16 @@ from PyInstaller.building.datastruct import Tree
 
 project_root = Path(SPECPATH)
 
-ui_tree = Tree(str(project_root / 'ui'), prefix='ui')
-data_tree = Tree(str(project_root / 'data'), prefix='data') if (project_root / 'data').exists() else []
+# Collect the UI exactly under _internal/ui in the onedir build.
+datas = list(Tree(str(project_root / 'ui'), prefix='ui'))
+if (project_root / 'data').exists():
+    datas += list(Tree(str(project_root / 'data'), prefix='data'))
 
 a = Analysis(
     ['app.py'],
     pathex=[str(project_root)],
     binaries=[],
-    datas=[ui_tree, data_tree],
+    datas=datas,
     hiddenimports=[
         'webview',
         'webview.platforms.edgechromium',
