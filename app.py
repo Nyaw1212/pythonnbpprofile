@@ -12,7 +12,15 @@ from src.personnel_service import PersonnelService
 from src.photo_service import get_drive_photo_data_url
 from src.profile_pdf import generate_profile_pdf
 
-ROOT_DIR = Path(__file__).resolve().parent
+
+def _resource_root() -> Path:
+    """Return the directory containing bundled read-only app resources."""
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS)
+    return Path(__file__).resolve().parent
+
+
+ROOT_DIR = _resource_root()
 UI_FILE = ROOT_DIR / "ui" / "index.html"
 
 
