@@ -7,6 +7,24 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
 DB_PATH = DATA_DIR / "personnel.db"
 
+PROFILE_FIELDS = {
+    "id_number": "TEXT",
+    "birthdate": "TEXT",
+    "civil_status": "TEXT",
+    "religion": "TEXT",
+    "highest_education": "TEXT",
+    "address_no": "TEXT",
+    "address_street": "TEXT",
+    "address_barangay": "TEXT",
+    "address_city": "TEXT",
+    "address_province": "TEXT",
+    "address_zip": "TEXT",
+    "emergency_contact": "TEXT",
+    "emergency_relationship": "TEXT",
+    "emergency_number": "TEXT",
+    "emergency_address": "TEXT",
+}
+
 BASE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS personnel (
     record_id TEXT,
@@ -26,9 +44,23 @@ CREATE TABLE IF NOT EXISTS personnel (
     created_at TEXT,
     updated_at TEXT,
     source_order INTEGER,
-    drive_file_id TEXT
+    drive_file_id TEXT,
+    id_number TEXT,
+    birthdate TEXT,
+    civil_status TEXT,
+    religion TEXT,
+    highest_education TEXT,
+    address_no TEXT,
+    address_street TEXT,
+    address_barangay TEXT,
+    address_city TEXT,
+    address_province TEXT,
+    address_zip TEXT,
+    emergency_contact TEXT,
+    emergency_relationship TEXT,
+    emergency_number TEXT,
+    emergency_address TEXT
 );
-
 CREATE INDEX IF NOT EXISTS idx_personnel_last_name ON personnel(last_name);
 CREATE INDEX IF NOT EXISTS idx_personnel_first_name ON personnel(first_name);
 CREATE INDEX IF NOT EXISTS idx_personnel_camp ON personnel(camp);
@@ -36,31 +68,19 @@ CREATE INDEX IF NOT EXISTS idx_personnel_office ON personnel(office);
 CREATE INDEX IF NOT EXISTS idx_personnel_rank ON personnel(rank);
 """
 
-
 def connect(db_path: Path | str = DB_PATH) -> sqlite3.Connection:
-    path = Path(db_path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(path)
-    connection.row_factory = sqlite3.Row
+    path = Path(db_path); path.parent.mkdir(parents=True, exist_ok=True)
+    connection = sqlite3.connect(path); connection.row_factory = sqlite3.Row
     return connection
 
-
 def _migrate(connection: sqlite3.Connection) -> None:
-    columns = {
-        row["name"]
-        for row in connection.execute("PRAGMA table_info(personnel)").fetchall()
-    }
-    if "source_order" not in columns:
-        connection.execute("ALTER TABLE personnel ADD COLUMN source_order INTEGER")
-    if "drive_file_id" not in columns:
-        connection.execute("ALTER TABLE personnel ADD COLUMN drive_file_id TEXT")
-
-    connection.execute(
-        "CREATE INDEX IF NOT EXISTS idx_personnel_source_order ON personnel(source_order)"
-    )
-
+    columns = {row["name"] for row in connection.execute("PRAGMA table_info(personnel)").fetchall()}
+    required = {"source_order": "INTEGER", "drive_file_id": "TEXT", **PROFILE_FIELDS}
+    for name, sql_type in required.items():
+        if name not in columns:
+            connection.execute(f"ALTER TABLE personnel ADD COLUMN {name} {sql_type}")
+    connection.execute("CREATE INDEX IF NOT EXISTS idx_personnel_source_order ON personnel(source_order)")
 
 def initialize(db_path: Path | str = DB_PATH) -> None:
     with connect(db_path) as connection:
-        connection.executescript(BASE_SCHEMA)
-        _migrate(connection)
+        connection.executescript(BASE_SCHEMA); _migrate(connection)
