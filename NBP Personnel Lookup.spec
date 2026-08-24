@@ -1,14 +1,28 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 from pathlib import Path
-from PyInstaller.building.datastruct import Tree
 
 project_root = Path(SPECPATH)
 
-# Collect the UI exactly under _internal/ui in the onedir build.
-datas = list(Tree(str(project_root / 'ui'), prefix='ui'))
-if (project_root / 'data').exists():
-    datas += list(Tree(str(project_root / 'data'), prefix='data'))
+# PyInstaller Analysis(datas=...) expects (source, destination_folder) pairs.
+# Build those pairs explicitly so the packaged onedir app gets:
+#   _internal/ui/...
+#   _internal/data/...
+def collect_folder(folder_name):
+    root = project_root / folder_name
+    if not root.exists():
+        return []
+
+    items = []
+    for path in root.rglob('*'):
+        if not path.is_file():
+            continue
+        destination = path.parent.relative_to(project_root)
+        items.append((str(path), str(destination)))
+    return items
+
+
+datas = collect_folder('ui') + collect_folder('data')
 
 a = Analysis(
     ['app.py'],
