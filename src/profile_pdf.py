@@ -5,6 +5,7 @@ from datetime import date, datetime
 from io import BytesIO
 from pathlib import Path
 from typing import Any
+from xml.sax.saxutils import escape
 
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
@@ -91,6 +92,23 @@ def _home_address(person: dict[str, Any]) -> str:
     return text or "—"
 
 
+def _cell_paragraph(value: Any, *, bold: bool = False) -> Paragraph:
+    style = ParagraphStyle(
+        "ProfileCellBold" if bold else "ProfileCell",
+        fontName="Helvetica-Bold" if bold else "Helvetica",
+        fontSize=6.8 if bold else 6.9,
+        leading=8.0,
+        textColor=TEXT,
+        wordWrap="CJK",
+        splitLongWords=True,
+        allowWidows=1,
+        allowOrphans=1,
+        spaceBefore=0,
+        spaceAfter=0,
+    )
+    return Paragraph(escape(_value(value)), style)
+
+
 def _section_title(text: str, width: float, main_color) -> Table:
     table = Table([[text]], colWidths=[width])
     table.setStyle(TableStyle([
@@ -107,18 +125,15 @@ def _section_title(text: str, width: float, main_color) -> Table:
 
 
 def _info_table(rows: list[tuple[str, str]], width: float, soft_color, label_width: float = 30 * mm, compact: bool = True) -> Table:
-    data = [[label, value] for label, value in rows]
+    data = [[_cell_paragraph(label, bold=True), _cell_paragraph(value)] for label, value in rows]
     table = Table(data, colWidths=[label_width, width - label_width])
-    pad = 4 if compact else 5
+    pad = 3.5 if compact else 4.5
     table.setStyle(TableStyle([
         ("GRID", (0, 0), (-1, -1), 0.4, GRID),
         ("BACKGROUND", (0, 0), (0, -1), soft_color),
-        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
-        ("TEXTCOLOR", (0, 0), (-1, -1), TEXT),
-        ("FONTSIZE", (0, 0), (-1, -1), 7.4),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 5),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
         ("TOPPADDING", (0, 0), (-1, -1), pad),
         ("BOTTOMPADDING", (0, 0), (-1, -1), pad),
     ]))
@@ -126,14 +141,14 @@ def _info_table(rows: list[tuple[str, str]], width: float, soft_color, label_wid
 
 
 def _placeholder_table(headers: list[str], message: str, widths: list[float], main_color) -> Table:
-    data = [headers, [message] + [""] * (len(headers) - 1)]
+    header_style = ParagraphStyle("HeaderCell", fontName="Helvetica-Bold", fontSize=5.4, leading=6.2, textColor=colors.white, alignment=TA_CENTER, wordWrap="CJK", splitLongWords=True)
+    data = [[Paragraph(escape(h), header_style) for h in headers], [message] + [""] * (len(headers) - 1)]
     table = Table(data, colWidths=widths)
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), main_color),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, 0), 5.7),
         ("ALIGN", (0, 0), (-1, 0), "CENTER"),
+        ("VALIGN", (0, 0), (-1, 0), "MIDDLE"),
         ("SPAN", (0, 1), (-1, 1)),
         ("ALIGN", (0, 1), (-1, 1), "CENTER"),
         ("TEXTCOLOR", (0, 1), (-1, 1), MUTED),
@@ -191,7 +206,7 @@ def generate_profile_pdf(person: dict[str, Any], output_path: Path | str) -> Pat
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle("ProfileTitle", parent=styles["Title"], fontName="Helvetica-Bold", fontSize=20, leading=22, textColor=ink_color, alignment=TA_CENTER, spaceAfter=0)
     subtitle_style = ParagraphStyle("ProfileSubtitle", parent=styles["Normal"], fontName="Helvetica", fontSize=7.5, leading=9, textColor=ink_color, alignment=TA_CENTER)
-    name_style = ParagraphStyle("Name", parent=styles["Heading2"], fontName="Helvetica-Bold", fontSize=11.5, leading=13, textColor=ink_color, alignment=TA_CENTER, spaceAfter=1 * mm)
+    name_style = ParagraphStyle("Name", parent=styles["Heading2"], fontName="Helvetica-Bold", fontSize=11.5, leading=13, textColor=ink_color, alignment=TA_CENTER, spaceAfter=1 * mm, wordWrap="CJK", splitLongWords=True)
     rank_style = ParagraphStyle("Rank", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=7.5, leading=9, textColor=ink_color, alignment=TA_CENTER)
 
     story = [Paragraph("PERSONNEL PROFILE", title_style), Paragraph("PERSONNEL OFFICE & MOVEMENT TRACKING", subtitle_style), Spacer(1, 2.5 * mm)]
@@ -224,7 +239,7 @@ def generate_profile_pdf(person: dict[str, Any], output_path: Path | str) -> Pat
         ("Address", _value(person.get("emergency_address"))),
     ]
 
-    left_block = [photo, Spacer(1, 2 * mm), Paragraph(_full_name(person).upper(), name_style), Paragraph(_value(person.get("rank")), rank_style), Spacer(1, 2 * mm), _info_table(identity_rows, left_width - 2 * mm, soft_color, 21 * mm)]
+    left_block = [photo, Spacer(1, 2 * mm), Paragraph(escape(_full_name(person).upper()), name_style), Paragraph(escape(_value(person.get("rank"))), rank_style), Spacer(1, 2 * mm), _info_table(identity_rows, left_width - 2 * mm, soft_color, 21 * mm)]
     left_block += [Spacer(1, 2.5 * mm), _section_title("PERSONAL INFORMATION", left_width - 2 * mm, main_color), _info_table(personal_rows, left_width - 2 * mm, soft_color, 20 * mm)]
     left_block += [Spacer(1, 2.5 * mm), _section_title("EMERGENCY CONTACT", left_width - 2 * mm, main_color), _info_table(emergency_rows, left_width - 2 * mm, soft_color, 20 * mm)]
 
@@ -244,8 +259,9 @@ def generate_profile_pdf(person: dict[str, Any], output_path: Path | str) -> Pat
         Spacer(1, 3 * mm),
         _section_title("REMARKS", right_width, main_color),
     ]
-    remarks = Table([["No remarks recorded."]], colWidths=[right_width], rowHeights=[12 * mm])
-    remarks.setStyle(TableStyle([("BOX", (0,0), (-1,-1), .4, GRID), ("TEXTCOLOR",(0,0),(-1,-1),MUTED), ("FONTSIZE",(0,0),(-1,-1),7), ("VALIGN",(0,0),(-1,-1),"TOP"), ("LEFTPADDING",(0,0),(-1,-1),6), ("TOPPADDING",(0,0),(-1,-1),5)]))
+    remarks_style = ParagraphStyle("Remarks", fontName="Helvetica", fontSize=7, leading=8.5, textColor=MUTED, wordWrap="CJK", splitLongWords=True)
+    remarks = Table([[Paragraph("No remarks recorded.", remarks_style)]], colWidths=[right_width], rowHeights=[12 * mm])
+    remarks.setStyle(TableStyle([("BOX", (0,0), (-1,-1), .4, GRID), ("VALIGN",(0,0),(-1,-1),"TOP"), ("LEFTPADDING",(0,0),(-1,-1),6), ("RIGHTPADDING",(0,0),(-1,-1),6), ("TOPPADDING",(0,0),(-1,-1),5)]))
     right_block.append(remarks)
 
     top = Table([[left_block, "", right_block]], colWidths=[left_width, gap, right_width], hAlign="LEFT")
