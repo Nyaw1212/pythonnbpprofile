@@ -13,6 +13,17 @@ function showToast(message,type='success'){
  toast.textContent=message;
  toastTimer=setTimeout(()=>{toast.classList.remove('show')},3500);
 }
+function resetBucket({keepPerson=true}={}){
+ state.file=null;
+ state.type='VL';
+ if(!keepPerson) state.person=null;
+ $('fileInput').value='';
+ $('fileName').textContent='No file selected';
+ $('suggestedName').value='';
+ [...$('leaveTypes').querySelectorAll('button')].forEach(button=>button.classList.toggle('active',button.dataset.type==='VL'));
+ $('status').textContent='Ready';
+ updateBucket();
+}
 function updateBucket(){
  const p=state.person, f=state.file, n=nowParts();
  if(p){$('selectedPerson').innerHTML=`<small>SELECTED PERSONNEL</small><strong>${clean(p.rank)} ${fullName(p)}</strong><span>${clean(p.office)||'Office not specified'}</span>`}
@@ -54,10 +65,8 @@ $('fileButton').onclick=async()=>{
    }
    throw new Error(result?.message||'Could not file document');
   }
-  $('status').textContent='Filed ✓';
-  const localPath=result.local?.path||'';
-  $('destination').textContent=`LOCAL: ${localPath} | DRIVE: ${result.drive?.filename||finalName}`;
   showToast('Document filed successfully — local copy saved and uploaded to Google Drive.');
+  resetBucket({keepPerson:true});
  }catch(e){
   $('status').textContent=$('status').textContent.includes('Local saved')?'Local saved, Drive failed':'Filing failed';
   showToast(`Could not complete filing: ${e.message||e}`,'error');
