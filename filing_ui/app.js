@@ -5,6 +5,14 @@ function fullName(p){return [p.first_name,p.middle_name,p.last_name,p.suffix].ma
 function safe(v){return clean(v).toUpperCase().replace(/[^A-Z0-9]+/g,'-').replace(/^-|-$/g,'')}
 function nowParts(){const d=new Date();return {year:d.getFullYear(),month:String(d.getMonth()+1).padStart(2,'0'),monthName:d.toLocaleString('en',{month:'long'}).toUpperCase()}}
 function extension(name){const m=clean(name).match(/(\.[^.]+)$/);return m?m[1].toLowerCase():''}
+let toastTimer;
+function showToast(message,type='success'){
+ const toast=$('toast');
+ clearTimeout(toastTimer);
+ toast.className=`toast ${type} show`;
+ toast.textContent=message;
+ toastTimer=setTimeout(()=>{toast.classList.remove('show')},3500);
+}
 function updateBucket(){
  const p=state.person, f=state.file, n=nowParts();
  if(p){$('selectedPerson').innerHTML=`<small>SELECTED PERSONNEL</small><strong>${clean(p.rank)} ${fullName(p)}</strong><span>${clean(p.office)||'Office not specified'}</span>`}
@@ -28,7 +36,7 @@ async function search(){
 function fileToBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const result=String(reader.result||'');resolve(result.includes(',')?result.split(',',2)[1]:result)};reader.onerror=()=>reject(reader.error||new Error('Could not read file'));reader.readAsDataURL(file)})}
 let timer;$('search').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(search,180)});
 $('leaveTypes').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;[...$('leaveTypes').querySelectorAll('button')].forEach(x=>x.classList.remove('active'));b.classList.add('active');state.type=b.dataset.type;updateBucket()});
-const dz=$('dropzone'),fi=$('fileInput');function takeFile(file){if(!file)return;const ok=/\.(pdf|jpe?g)$/i.test(file.name);if(!ok){$('status').textContent='PDF/JPG only';return}state.file=file;$('status').textContent='File ready';updateBucket()}
+const dz=$('dropzone'),fi=$('fileInput');function takeFile(file){if(!file)return;const ok=/\.(pdf|jpe?g)$/i.test(file.name);if(!ok){$('status').textContent='PDF/JPG only';showToast('Only PDF and JPG files are supported.','error');return}state.file=file;$('status').textContent='File ready';updateBucket()}
 fi.addEventListener('change',()=>takeFile(fi.files[0]));['dragenter','dragover'].forEach(x=>dz.addEventListener(x,e=>{e.preventDefault();dz.classList.add('drag')}));['dragleave','drop'].forEach(x=>dz.addEventListener(x,e=>{e.preventDefault();dz.classList.remove('drag')}));dz.addEventListener('drop',e=>takeFile(e.dataTransfer.files[0]));
 $('fileButton').onclick=async()=>{
  if(!state.person||!state.file)return;
@@ -48,10 +56,12 @@ $('fileButton').onclick=async()=>{
   }
   $('status').textContent='Filed ✓';
   const localPath=result.local?.path||'';
-  const driveLink=result.drive?.web_view_link||'';
   $('destination').textContent=`LOCAL: ${localPath} | DRIVE: ${result.drive?.filename||finalName}`;
-  alert(`Document filed successfully.\n\nLocal copy:\n${localPath}\n\nGoogle Drive:\n${driveLink||'Uploaded successfully'}`);
- }catch(e){$('status').textContent=$('status').textContent.includes('Local saved')?'Local saved, Drive failed':'Filing failed';alert(`Could not complete filing:\n${e.message||e}`)}
+  showToast('Document filed successfully — local copy saved and uploaded to Google Drive.');
+ }catch(e){
+  $('status').textContent=$('status').textContent.includes('Local saved')?'Local saved, Drive failed':'Filing failed';
+  showToast(`Could not complete filing: ${e.message||e}`,'error');
+ }
  finally{button.disabled=false;button.textContent='FILE DOCUMENT'}
 };
 window.addEventListener('pywebviewready',search);
