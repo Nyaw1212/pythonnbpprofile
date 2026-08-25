@@ -3,7 +3,9 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
+from src.runtime_paths import app_root
+
+ROOT_DIR = app_root()
 DATA_DIR = ROOT_DIR / "data"
 DB_PATH = DATA_DIR / "personnel.db"
 
