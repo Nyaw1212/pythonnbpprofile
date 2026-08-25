@@ -12,7 +12,7 @@ function updateBucket(){
  $('fileName').textContent=f?f.name:'No file selected';
  if(p&&f){$('suggestedName').value=`${n.year}-${n.month}_${state.type}_${safe(p.rank)}_${safe(fullName(p))}${extension(f.name)}`}
  else if(!p||!f){$('suggestedName').value=''}
- $('destination').textContent=p?`PERSONNEL FILES / ${clean(p.rank)} ${fullName(p)} / LEAVE / ${n.year} / ${n.month} - ${n.monthName}`:'PERSONNEL FILES / — / LEAVE / —';
+ $('destination').textContent=p?`LOCAL: Documents / NBP Personnel Files / ${clean(p.rank)} ${fullName(p)} / LEAVE / ${n.year} / ${n.month} - ${n.monthName}`:'LOCAL: Documents / NBP Personnel Files / — / LEAVE / —';
  $('fileButton').disabled=!(p&&f&&state.type);
 }
 async function search(){
@@ -25,9 +25,24 @@ async function search(){
   [...body.querySelectorAll('tr')].forEach(tr=>tr.onclick=()=>{[...body.querySelectorAll('tr')].forEach(x=>x.classList.remove('selected'));tr.classList.add('selected');state.person=rows[Number(tr.dataset.i)];updateBucket()});
  }catch(e){$('results').innerHTML=`<tr><td colspan="5" class="empty">${e}</td></tr>`}
 }
+function fileToBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const result=String(reader.result||'');resolve(result.includes(',')?result.split(',',2)[1]:result)};reader.onerror=()=>reject(reader.error||new Error('Could not read file'));reader.readAsDataURL(file)})}
 let timer;$('search').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(search,180)});
 $('leaveTypes').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;[...$('leaveTypes').querySelectorAll('button')].forEach(x=>x.classList.remove('active'));b.classList.add('active');state.type=b.dataset.type;updateBucket()});
 const dz=$('dropzone'),fi=$('fileInput');function takeFile(file){if(!file)return;const ok=/\.(pdf|jpe?g)$/i.test(file.name);if(!ok){$('status').textContent='PDF/JPG only';return}state.file=file;$('status').textContent='File ready';updateBucket()}
 fi.addEventListener('change',()=>takeFile(fi.files[0]));['dragenter','dragover'].forEach(x=>dz.addEventListener(x,e=>{e.preventDefault();dz.classList.add('drag')}));['dragleave','drop'].forEach(x=>dz.addEventListener(x,e=>{e.preventDefault();dz.classList.remove('drag')}));dz.addEventListener('drop',e=>takeFile(e.dataTransfer.files[0]));
-$('fileButton').onclick=()=>{$('status').textContent='Preview ready';alert(`V1 workflow is ready.\n\nPersonnel: ${clean(state.person.rank)} ${fullName(state.person)}\nLeave: ${state.type}\nFilename: ${$('suggestedName').value}\n\nGoogle Drive upload is intentionally not connected yet.`)};
+$('fileButton').onclick=async()=>{
+ if(!state.person||!state.file)return;
+ const button=$('fileButton');
+ button.disabled=true;button.textContent='FILING…';$('status').textContent='Saving local copy';
+ try{
+  const data=await fileToBase64(state.file);
+  const finalName=clean($('suggestedName').value)||state.file.name;
+  const result=await window.pywebview.api.save_local_copy(data,finalName,clean(state.person.rank),fullName(state.person),'LEAVE');
+  if(!result||!result.ok)throw new Error(result?.message||'Could not save local copy');
+  $('status').textContent='Filed locally';
+  $('destination').textContent=`SAVED: ${result.path}`;
+  alert(`Local filing copy saved.\n\n${result.path}\n\nThe original source file was not changed.`);
+ }catch(e){$('status').textContent='Filing failed';alert(`Could not file document:\n${e.message||e}`)}
+ finally{button.disabled=false;button.textContent='FILE DOCUMENT'}
+};
 window.addEventListener('pywebviewready',search);
