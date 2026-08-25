@@ -6,6 +6,7 @@ import sys
 import webview
 
 from src.db import DB_PATH
+from src.filing_service import save_local_filing_copy
 from src.personnel_service import PersonnelService
 
 ROOT_DIR = Path(__file__).resolve().parent
@@ -21,6 +22,15 @@ class FilingApi:
 
     def get_profile(self, badge_number):
         return self.personnel.get_profile(str(badge_number))
+
+    def save_local_copy(self, data_base64, filename, rank, full_name, document_type="LEAVE"):
+        return save_local_filing_copy(
+            data_base64=data_base64,
+            filename=filename,
+            rank=rank,
+            full_name=full_name,
+            document_type=document_type,
+        )
 
 
 if __name__ == "__main__":
