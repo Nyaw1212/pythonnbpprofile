@@ -13,8 +13,13 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 CREDENTIALS_DIR = ROOT_DIR / "credentials"
 CLIENT_FILE = CREDENTIALS_DIR / "oauth_client.json"
 TOKEN_FILE = CREDENTIALS_DIR / "token.json"
+FOLDER_CACHE_FILE = CREDENTIALS_DIR / "drive_folder_cache.json"
 ROOT_FOLDER_ID = "1JL6uRUmvAov6LFPOyYNKt6ePRGbLS8u0"
 SCOPES = ["https://www.googleapis.com/auth/drive"]
+
+# In-memory cache avoids disk reads during repeated filing in the same session.
+_FOLDER_CACHE: dict[str, str] | None = None
+_SERVICE = None
 
 
 def _validate_client_file() -> None:
@@ -56,14 +61,44 @@ def _credentials() -> Credentials:
 
 
 def _service():
-    return build("drive", "v3", credentials=_credentials(), cache_discovery=False)
+    global _SERVICE
+    if _SERVICE is None:
+        _SERVICE = build("drive", "v3", credentials=_credentials(), cache_discovery=False)
+    return _SERVICE
 
 
 def _escape_query(value: str) -> str:
     return str(value).replace("\\", "\\\\").replace("'", "\\'")
 
 
+def _load_folder_cache() -> dict[str, str]:
+    global _FOLDER_CACHE
+    if _FOLDER_CACHE is not None:
+        return _FOLDER_CACHE
+    try:
+        data = json.loads(FOLDER_CACHE_FILE.read_text(encoding="utf-8")) if FOLDER_CACHE_FILE.exists() else {}
+        _FOLDER_CACHE = data if isinstance(data, dict) else {}
+    except Exception:
+        _FOLDER_CACHE = {}
+    return _FOLDER_CACHE
+
+
+def _save_folder_cache() -> None:
+    CREDENTIALS_DIR.mkdir(parents=True, exist_ok=True)
+    FOLDER_CACHE_FILE.write_text(json.dumps(_load_folder_cache(), indent=2), encoding="utf-8")
+
+
+def _cache_key(parent_id: str, name: str) -> str:
+    return f"{parent_id}|{name.strip().casefold()}"
+
+
 def _get_or_create_folder(service, parent_id: str, name: str) -> str:
+    cache = _load_folder_cache()
+    key = _cache_key(parent_id, name)
+    cached_id = cache.get(key)
+    if cached_id:
+        return cached_id
+
     safe_name = _escape_query(name)
     query = (
         f"'{parent_id}' in parents and trashed = false and "
@@ -77,17 +112,21 @@ def _get_or_create_folder(service, parent_id: str, name: str) -> str:
     ).execute()
     matches = result.get("files", [])
     if matches:
-        return matches[0]["id"]
+        folder_id = matches[0]["id"]
+    else:
+        folder = service.files().create(
+            body={
+                "name": name,
+                "mimeType": "application/vnd.google-apps.folder",
+                "parents": [parent_id],
+            },
+            fields="id",
+        ).execute()
+        folder_id = folder["id"]
 
-    folder = service.files().create(
-        body={
-            "name": name,
-            "mimeType": "application/vnd.google-apps.folder",
-            "parents": [parent_id],
-        },
-        fields="id",
-    ).execute()
-    return folder["id"]
+    cache[key] = folder_id
+    _save_folder_cache()
+    return folder_id
 
 
 def upload_filed_document(
@@ -109,7 +148,9 @@ def upload_filed_document(
         year_id = _get_or_create_folder(service, category_id, year)
         month_id = _get_or_create_folder(service, year_id, month)
 
-        media = MediaFileUpload(str(path), resumable=True)
+        # Normal personnel documents are small enough for a direct upload. This avoids
+        # the extra resumable-session setup request while keeping the code simple.
+        media = MediaFileUpload(str(path), resumable=False)
         uploaded = service.files().create(
             body={"name": path.name, "parents": [month_id]},
             media_body=media,
