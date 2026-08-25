@@ -12,7 +12,7 @@ function updateBucket(){
  $('fileName').textContent=f?f.name:'No file selected';
  if(p&&f){$('suggestedName').value=`${n.year}-${n.month}_${state.type}_${safe(p.rank)}_${safe(fullName(p))}${extension(f.name)}`}
  else if(!p||!f){$('suggestedName').value=''}
- $('destination').textContent=p?`LOCAL: Documents / NBP Personnel Files / ${clean(p.rank)} ${fullName(p)} / LEAVE / ${n.year} / ${n.month} - ${n.monthName}`:'LOCAL: Documents / NBP Personnel Files / — / LEAVE / —';
+ $('destination').textContent=p?`LOCAL + DRIVE: ${clean(p.rank)} ${fullName(p)} / LEAVE / ${n.year} / ${n.month} - ${n.monthName}`:'LOCAL + DRIVE: — / LEAVE / —';
  $('fileButton').disabled=!(p&&f&&state.type);
 }
 async function search(){
@@ -33,16 +33,25 @@ fi.addEventListener('change',()=>takeFile(fi.files[0]));['dragenter','dragover']
 $('fileButton').onclick=async()=>{
  if(!state.person||!state.file)return;
  const button=$('fileButton');
- button.disabled=true;button.textContent='FILING…';$('status').textContent='Saving local copy';
+ button.disabled=true;button.textContent='FILING…';$('status').textContent='Saving + uploading';
  try{
   const data=await fileToBase64(state.file);
   const finalName=clean($('suggestedName').value)||state.file.name;
-  const result=await window.pywebview.api.save_local_copy(data,finalName,clean(state.person.rank),fullName(state.person),'LEAVE');
-  if(!result||!result.ok)throw new Error(result?.message||'Could not save local copy');
-  $('status').textContent='Filed locally';
-  $('destination').textContent=`SAVED: ${result.path}`;
-  alert(`Local filing copy saved.\n\n${result.path}\n\nThe original source file was not changed.`);
- }catch(e){$('status').textContent='Filing failed';alert(`Could not file document:\n${e.message||e}`)}
+  const result=await window.pywebview.api.file_document(data,finalName,clean(state.person.rank),fullName(state.person),'LEAVE');
+  if(!result||!result.ok){
+   if(result?.local_saved){
+    $('status').textContent='Local saved, Drive failed';
+    $('destination').textContent=`LOCAL SAVED: ${result.local?.path||''}`;
+    throw new Error(result.message||'Drive upload failed');
+   }
+   throw new Error(result?.message||'Could not file document');
+  }
+  $('status').textContent='Filed ✓';
+  const localPath=result.local?.path||'';
+  const driveLink=result.drive?.web_view_link||'';
+  $('destination').textContent=`LOCAL: ${localPath} | DRIVE: ${result.drive?.filename||finalName}`;
+  alert(`Document filed successfully.\n\nLocal copy:\n${localPath}\n\nGoogle Drive:\n${driveLink||'Uploaded successfully'}`);
+ }catch(e){$('status').textContent=$('status').textContent.includes('Local saved')?'Local saved, Drive failed':'Filing failed';alert(`Could not complete filing:\n${e.message||e}`)}
  finally{button.disabled=false;button.textContent='FILE DOCUMENT'}
 };
 window.addEventListener('pywebviewready',search);
