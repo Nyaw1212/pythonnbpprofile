@@ -9,7 +9,9 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
+from src.runtime_paths import app_root
+
+ROOT_DIR = app_root()
 CREDENTIALS_DIR = ROOT_DIR / "credentials"
 CLIENT_FILE = CREDENTIALS_DIR / "oauth_client.json"
 TOKEN_FILE = CREDENTIALS_DIR / "token.json"
@@ -17,7 +19,6 @@ FOLDER_CACHE_FILE = CREDENTIALS_DIR / "drive_folder_cache.json"
 ROOT_FOLDER_ID = "1JL6uRUmvAov6LFPOyYNKt6ePRGbLS8u0"
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 
-# In-memory cache avoids disk reads during repeated filing in the same session.
 _FOLDER_CACHE: dict[str, str] | None = None
 _SERVICE = None
 
@@ -148,8 +149,6 @@ def upload_filed_document(
         year_id = _get_or_create_folder(service, category_id, year)
         month_id = _get_or_create_folder(service, year_id, month)
 
-        # Normal personnel documents are small enough for a direct upload. This avoids
-        # the extra resumable-session setup request while keeping the code simple.
         media = MediaFileUpload(str(path), resumable=False)
         uploaded = service.files().create(
             body={"name": path.name, "parents": [month_id]},
