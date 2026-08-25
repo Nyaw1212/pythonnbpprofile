@@ -12,6 +12,8 @@
     <small>Leave Filing • Development</small>
   </header>
 
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
   <main>
     <section class="search-panel">
       <div class="search-head">
@@ -44,7 +46,23 @@
 
       <div class="field-label">LEAVE TYPE</div>
       <div class="chips" id="leaveTypes">
-        <button data-type="VL" class="active">VL</button><button data-type="SL">SL</button><button data-type="SPL">SPL</button><button data-type="FL">FL</button><button data-type="OTHER">OTHER</button>
+        <button data-type="VL" class="active" title="Vacation Leave">VL</button>
+        <button data-type="SL" title="Sick Leave">SL</button>
+        <button data-type="SPL" title="Special Privilege Leave">SPL</button>
+        <button data-type="FL" title="Forced Leave">FL</button>
+        <button data-type="ML" title="Maternity Leave">ML</button>
+        <button data-type="PML" title="Paternity Leave">PML</button>
+        <button data-type="PL" title="Parental Leave">PL</button>
+        <button data-type="EL" title="Emergency Leave">EL</button>
+        <button data-type="TOIL" title="Time Off In Lieu">TOIL</button>
+        <button data-type="OD" title="Official / Other Duty">OD</button>
+        <button data-type="STUDY-LEAVE">STUDY LEAVE</button>
+        <button data-type="REHAB-LEAVE">REHAB LEAVE</button>
+        <button data-type="SOLO-PARENT-LEAVE">SOLO PARENT</button>
+        <button data-type="VAWC-LEAVE">VAWC LEAVE</button>
+        <button data-type="SPECIAL-LEAVE-WOMEN">SPECIAL LEAVE FOR WOMEN</button>
+        <button data-type="LWOP">LWOP</button>
+        <button data-type="OTHER">OTHER</button>
       </div>
 
       <div class="filename-box">
@@ -55,7 +73,7 @@
 
       <div class="destination" id="destination">PERSONNEL FILES / — / LEAVE / —</div>
       <button class="file-button" id="fileButton" disabled>FILE DOCUMENT</button>
-      <p class="note">V1 preview only — Google Drive upload will be connected after we lock the workflow.</p>
+      <p class="note">Creates a renamed local copy and uploads the same filed document to Google Drive.</p>
     </aside>
   </main>
   <script src="app.js"></script>
