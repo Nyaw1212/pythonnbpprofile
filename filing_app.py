@@ -10,9 +10,9 @@ from src.db import DB_PATH
 from src.drive_filing_service import upload_filed_document
 from src.filing_service import save_local_filing_copy
 from src.personnel_service import PersonnelService
+from src.runtime_paths import resource_root
 
-ROOT_DIR = Path(__file__).resolve().parent
-UI_FILE = ROOT_DIR / "filing_ui" / "index.html"
+UI_FILE = resource_root() / "filing_ui" / "index.html"
 
 
 class FilingApi:
