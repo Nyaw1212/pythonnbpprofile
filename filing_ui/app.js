@@ -13,7 +13,7 @@ function showToast(message,type='success'){
  toast.textContent=message;
  toastTimer=setTimeout(()=>{toast.classList.remove('show')},3500);
 }
-function resetBucket({keepPerson=true}={}){
+function resetBucket({keepPerson=false}={}){
  state.file=null;
  state.type='VL';
  if(!keepPerson) state.person=null;
@@ -22,6 +22,9 @@ function resetBucket({keepPerson=true}={}){
  $('suggestedName').value='';
  [...$('leaveTypes').querySelectorAll('button')].forEach(button=>button.classList.toggle('active',button.dataset.type==='VL'));
  $('status').textContent='Ready';
+ if(!keepPerson){
+  [...$('results').querySelectorAll('tr')].forEach(row=>row.classList.remove('selected'));
+ }
  updateBucket();
 }
 function updateBucket(){
@@ -49,7 +52,6 @@ let timer;$('search').addEventListener('input',()=>{clearTimeout(timer);timer=se
 $('leaveTypes').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;[...$('leaveTypes').querySelectorAll('button')].forEach(x=>x.classList.remove('active'));b.classList.add('active');state.type=b.dataset.type;updateBucket()});
 $('clearBucket').addEventListener('click',()=>{
  resetBucket({keepPerson:false});
- [...$('results').querySelectorAll('tr')].forEach(row=>row.classList.remove('selected'));
  showToast('Filing bucket cleared.','success');
 });
 const dz=$('dropzone'),fi=$('fileInput');function takeFile(file){if(!file)return;const ok=/\.(pdf|jpe?g)$/i.test(file.name);if(!ok){$('status').textContent='PDF/JPG only';showToast('Only PDF and JPG files are supported.','error');return}state.file=file;$('status').textContent='File ready';updateBucket()}
@@ -71,11 +73,14 @@ $('fileButton').onclick=async()=>{
    throw new Error(result?.message||'Could not file document');
   }
   showToast('Document filed successfully — local copy saved and uploaded to Google Drive.');
-  resetBucket({keepPerson:true});
+  resetBucket({keepPerson:false});
  }catch(e){
   $('status').textContent=$('status').textContent.includes('Local saved')?'Local saved, Drive failed':'Filing failed';
   showToast(`Could not complete filing: ${e.message||e}`,'error');
  }
- finally{button.disabled=false;button.textContent='FILE DOCUMENT'}
+ finally{
+  button.textContent='FILE DOCUMENT';
+  updateBucket();
+ }
 };
 window.addEventListener('pywebviewready',search);
