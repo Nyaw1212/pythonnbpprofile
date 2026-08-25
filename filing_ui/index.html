@@ -29,7 +29,13 @@
     </section>
 
     <aside class="bucket">
-      <div class="bucket-title"><span>FILING BUCKET</span><span class="status" id="status">Ready</span></div>
+      <div class="bucket-title">
+        <span>FILING BUCKET</span>
+        <div class="bucket-actions">
+          <span class="status" id="status">Ready</span>
+          <button class="bucket-clear" id="clearBucket" type="button" title="Clear filing bucket" aria-label="Clear filing bucket">×</button>
+        </div>
+      </div>
 
       <div class="selected-person" id="selectedPerson">
         <small>SELECTED PERSONNEL</small>
@@ -50,6 +56,7 @@
         <button data-type="SL" title="Sick Leave">SL</button>
         <button data-type="SPL" title="Special Privilege Leave">SPL</button>
         <button data-type="FL" title="Forced Leave">FL</button>
+        <button data-type="WL" title="Wellness Leave">WELLNESS LEAVE</button>
         <button data-type="ML" title="Maternity Leave">ML</button>
         <button data-type="PML" title="Paternity Leave">PML</button>
         <button data-type="PL" title="Parental Leave">PL</button>
