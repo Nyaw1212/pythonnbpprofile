@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
+import sys
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -9,7 +11,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
-from src.runtime_paths import app_root
+from src.runtime_paths import app_root, is_frozen
 
 ROOT_DIR = app_root()
 CREDENTIALS_DIR = ROOT_DIR / "credentials"
@@ -23,9 +25,42 @@ _FOLDER_CACHE: dict[str, str] | None = None
 _SERVICE = None
 
 
+def _dev_credentials_dir() -> Path | None:
+    if not is_frozen():
+        return None
+    # Typical development build layout:
+    # repo/dist/NBP Personnel Filing/NBP Personnel Filing.exe
+    exe_dir = Path(sys.executable).resolve().parent
+    repo_candidate = exe_dir.parent.parent
+    candidate = repo_candidate / "credentials"
+    return candidate if candidate.exists() else None
+
+
+def _ensure_packaged_credentials() -> None:
+    """Copy existing dev credentials beside the EXE on first packaged run.
+
+    This keeps secrets out of Git/PyInstaller while avoiding manual copying after
+    every local rebuild. For a portable install on another PC, the credentials
+    folder still needs to be provided beside the EXE once.
+    """
+    CREDENTIALS_DIR.mkdir(parents=True, exist_ok=True)
+    source_dir = _dev_credentials_dir()
+    if not source_dir:
+        return
+    for name in ("oauth_client.json", "token.json", "drive_folder_cache.json"):
+        source = source_dir / name
+        destination = CREDENTIALS_DIR / name
+        if source.exists() and not destination.exists():
+            shutil.copy2(source, destination)
+
+
 def _validate_client_file() -> None:
+    _ensure_packaged_credentials()
     if not CLIENT_FILE.exists():
-        raise FileNotFoundError(f"OAuth client file not found: {CLIENT_FILE}")
+        raise FileNotFoundError(
+            f"OAuth client file not found: {CLIENT_FILE}. "
+            "Place the credentials folder beside NBP Personnel Filing.exe."
+        )
     try:
         payload = json.loads(CLIENT_FILE.read_text(encoding="utf-8"))
     except Exception as exc:
@@ -76,6 +111,7 @@ def _load_folder_cache() -> dict[str, str]:
     global _FOLDER_CACHE
     if _FOLDER_CACHE is not None:
         return _FOLDER_CACHE
+    _ensure_packaged_credentials()
     try:
         data = json.loads(FOLDER_CACHE_FILE.read_text(encoding="utf-8")) if FOLDER_CACHE_FILE.exists() else {}
         _FOLDER_CACHE = data if isinstance(data, dict) else {}
