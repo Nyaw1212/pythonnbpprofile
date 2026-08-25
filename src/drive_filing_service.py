@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from google.auth.transport.requests import Request
@@ -16,10 +17,29 @@ ROOT_FOLDER_ID = "1JL6uRUmvAov6LFPOyYNKt6ePRGbLS8u0"
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 
 
-def _credentials() -> Credentials:
+def _validate_client_file() -> None:
     if not CLIENT_FILE.exists():
         raise FileNotFoundError(f"OAuth client file not found: {CLIENT_FILE}")
+    try:
+        payload = json.loads(CLIENT_FILE.read_text(encoding="utf-8"))
+    except Exception as exc:
+        raise ValueError(f"Could not read OAuth client JSON: {exc}") from exc
 
+    if "installed" not in payload:
+        if "web" in payload:
+            raise ValueError(
+                "The OAuth JSON is for a Web application. Create a new OAuth client in "
+                "Google Auth Platform > Clients with Application type = Desktop app, "
+                "download that JSON, and save it as credentials/oauth_client.json."
+            )
+        raise ValueError(
+            "The OAuth JSON is not a Desktop app client. Create an OAuth client with "
+            "Application type = Desktop app and download its JSON."
+        )
+
+
+def _credentials() -> Credentials:
+    _validate_client_file()
     CREDENTIALS_DIR.mkdir(parents=True, exist_ok=True)
     creds = None
     if TOKEN_FILE.exists():
