@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NBP Personnel Filing</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <div><strong>NBP</strong><span>Personnel Filing</span></div>
+    <small>Leave Filing • Development</small>
+  </header>
+
+  <main>
+    <section class="search-panel">
+      <div class="search-head">
+        <div><h1>Personnel Search</h1><p>Select the personnel who owns the document.</p></div>
+        <textarea id="search" rows="2" placeholder="Search name or rank…"></textarea>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Rank</th><th>Last Name</th><th>First Name</th><th>Middle Name</th><th>Office</th></tr></thead>
+          <tbody id="results"><tr><td colspan="5" class="empty">Loading personnel…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <aside class="bucket">
+      <div class="bucket-title"><span>FILING BUCKET</span><span class="status" id="status">Ready</span></div>
+
+      <div class="selected-person" id="selectedPerson">
+        <small>SELECTED PERSONNEL</small>
+        <strong>No personnel selected</strong>
+        <span>Click a row from the search results.</span>
+      </div>
+
+      <label class="dropzone" id="dropzone">
+        <input id="fileInput" type="file" accept=".pdf,.jpg,.jpeg,image/jpeg,application/pdf">
+        <b>Drop PDF / JPG here</b>
+        <span>or click to browse</span>
+        <em id="fileName">No file selected</em>
+      </label>
+
+      <div class="field-label">LEAVE TYPE</div>
+      <div class="chips" id="leaveTypes">
+        <button data-type="VL" class="active">VL</button><button data-type="SL">SL</button><button data-type="SPL">SPL</button><button data-type="FL">FL</button><button data-type="OTHER">OTHER</button>
+      </div>
+
+      <div class="filename-box">
+        <label for="suggestedName">FILENAME</label>
+        <input id="suggestedName" type="text" placeholder="Select personnel and a file">
+        <small>Editable before filing. The original extension is preserved.</small>
+      </div>
+
+      <div class="destination" id="destination">PERSONNEL FILES / — / LEAVE / —</div>
+      <button class="file-button" id="fileButton" disabled>FILE DOCUMENT</button>
+      <p class="note">V1 preview only — Google Drive upload will be connected after we lock the workflow.</p>
+    </aside>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
