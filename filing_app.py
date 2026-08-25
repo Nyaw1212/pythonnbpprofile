@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+import shutil
+import sqlite3
 import sys
 
 import webview
@@ -10,13 +12,43 @@ from src.db import DB_PATH
 from src.drive_filing_service import upload_filed_document
 from src.filing_service import save_local_filing_copy
 from src.personnel_service import PersonnelService
-from src.runtime_paths import resource_root
+from src.runtime_paths import is_frozen, resource_root
 
 UI_FILE = resource_root() / "filing_ui" / "index.html"
 
 
+def _database_has_personnel(path: Path) -> bool:
+    if not path.exists() or path.stat().st_size == 0:
+        return False
+    try:
+        with sqlite3.connect(path) as connection:
+            row = connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='personnel'"
+            ).fetchone()
+            if not row:
+                return False
+            count = connection.execute("SELECT COUNT(*) FROM personnel").fetchone()[0]
+            return int(count or 0) > 0
+    except Exception:
+        return False
+
+
+def _ensure_packaged_database() -> None:
+    """Copy the bundled database beside the EXE when no usable external DB exists."""
+    if not is_frozen() or _database_has_personnel(DB_PATH):
+        return
+
+    bundled_db = resource_root() / "data" / "personnel.db"
+    if not bundled_db.exists():
+        return
+
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(bundled_db, DB_PATH)
+
+
 class FilingApi:
     def __init__(self):
+        _ensure_packaged_database()
         self.personnel = PersonnelService(DB_PATH)
 
     def search_personnel(self, query="", limit=100):
@@ -67,6 +99,8 @@ class FilingApi:
 
 
 if __name__ == "__main__":
+    _ensure_packaged_database()
+
     if not UI_FILE.exists():
         raise FileNotFoundError(f"Filing UI not found: {UI_FILE}")
 
