@@ -47,6 +47,11 @@ async function search(){
 function fileToBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const result=String(reader.result||'');resolve(result.includes(',')?result.split(',',2)[1]:result)};reader.onerror=()=>reject(reader.error||new Error('Could not read file'));reader.readAsDataURL(file)})}
 let timer;$('search').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(search,180)});
 $('leaveTypes').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;[...$('leaveTypes').querySelectorAll('button')].forEach(x=>x.classList.remove('active'));b.classList.add('active');state.type=b.dataset.type;updateBucket()});
+$('clearBucket').addEventListener('click',()=>{
+ resetBucket({keepPerson:false});
+ [...$('results').querySelectorAll('tr')].forEach(row=>row.classList.remove('selected'));
+ showToast('Filing bucket cleared.','success');
+});
 const dz=$('dropzone'),fi=$('fileInput');function takeFile(file){if(!file)return;const ok=/\.(pdf|jpe?g)$/i.test(file.name);if(!ok){$('status').textContent='PDF/JPG only';showToast('Only PDF and JPG files are supported.','error');return}state.file=file;$('status').textContent='File ready';updateBucket()}
 fi.addEventListener('change',()=>takeFile(fi.files[0]));['dragenter','dragover'].forEach(x=>dz.addEventListener(x,e=>{e.preventDefault();dz.classList.add('drag')}));['dragleave','drop'].forEach(x=>dz.addEventListener(x,e=>{e.preventDefault();dz.classList.remove('drag')}));dz.addEventListener('drop',e=>takeFile(e.dataTransfer.files[0]));
 $('fileButton').onclick=async()=>{
