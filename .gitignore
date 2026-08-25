@@ -16,8 +16,10 @@ cache/
 logs/
 
 # Credentials / secrets
+credentials/
 credentials*.json
 service-account*.json
+token.json
 *.pem
 
 # Local source exports
