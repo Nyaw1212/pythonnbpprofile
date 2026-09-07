@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NBP Personnel Lookup V2</title>
+  <link rel="stylesheet" href="../ui/styles.css">
+  <link rel="stylesheet" href="profile_v2.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><div class="brand-mark">NBP</div><div><div class="brand-title">Personnel</div><div class="brand-subtitle">Lookup V2</div></div></div>
+      <div class="sync-chip"><span id="syncDot"></span><span id="syncStatus">Local database</span></div>
+      <button id="syncButton" class="sidebar-sync" type="button">↻ Sync Google Sheet</button>
+      <button id="openSheetButton" class="sidebar-open-sheet" type="button">↗ Open Google Sheet</button>
+      <div id="syncMeta" class="sync-meta">Uses local data when offline.</div>
+      <div class="sidebar-filters">
+        <button id="clearButton" class="sidebar-clear" type="button">Clear filters</button>
+        <div class="sidebar-filter-section"><div class="sidebar-filter-heading">Camp</div><div id="campChips" class="sidebar-chip-list"></div></div>
+        <div class="sidebar-filter-section grow-section"><div class="sidebar-filter-heading">Office</div><div id="officeChips" class="sidebar-chip-list scroll-chip-list"></div></div>
+        <div class="sidebar-filter-section grow-section"><div class="sidebar-filter-heading">Rank</div><div id="rankChips" class="sidebar-chip-list scroll-chip-list"></div></div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <header class="topbar"><div><p class="eyebrow">NEW BILIBID PRISON</p><h1>Personnel Lookup V2</h1><p class="muted">Alternate personnel profile layout.</p></div><div class="stat-card"><span id="totalPersonnel">0</span><small>Personnel</small></div></header>
+      <section class="search-panel compact-search-panel"><div class="search-box multiline-search"><span class="search-icon">⌕</span><textarea id="searchInput" rows="3" placeholder="Search names or badges — one per line..." autocomplete="off"></textarea></div><div class="search-hint">Paste multiple names on separate lines.</div></section>
+      <section class="results-heading"><div><h2>Results</h2><p id="resultCount" class="muted">Loading...</p></div></section>
+      <section class="table-card" aria-label="Personnel results"><div class="table-shell"><table class="personnel-table"><thead><tr><th>Badge</th><th>Rank</th><th>Name</th><th>Camp</th><th>Office</th><th>Classification</th><th>Type</th></tr></thead><tbody id="results"></tbody></table><div id="emptyState" class="empty-state hidden">No personnel matched your search.</div></div><footer class="pagination-bar"><div id="pageSummary" class="page-summary">Showing 0 results</div><div class="pagination-controls"><label class="rows-control">Rows per page <select id="pageSize"><option value="10">10</option><option value="25" selected>25</option><option value="50">50</option><option value="100">100</option></select></label><button id="prevPage" class="page-nav" type="button">‹ Prev</button><div id="pageNumbers" class="page-numbers"></div><button id="nextPage" class="page-nav" type="button">Next ›</button></div></footer></section>
+    </main>
+  </div>
+
+  <div id="profileModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="profile-modal-frame v2-modal-frame">
+      <div class="profile-toolbar"><span>A4 Personnel Profile — V2</span><div class="profile-toolbar-actions"><span id="pdfStatus" class="pdf-status"></span><button id="printProfileButton" class="print-profile-button" type="button">Print</button><button id="savePdfButton" class="save-pdf-button" type="button">Save PDF</button><button class="close-button profile-close" data-close-modal aria-label="Close">×</button></div></div>
+
+      <article class="profile-sheet v2-profile-sheet">
+        <div class="v2-print-letterhead">
+          <img src="assets/BUCOR HEADER.png" alt="BuCor and New Bilibid Prison header">
+        </div>
+
+        <header class="v2-brand-header">
+          <div class="v2-brand-mark">NBP</div>
+          <div><h2>PERSONNEL PROFILE</h2><p>PERSONNEL OFFICE &amp; MOVEMENT TRACKING</p></div>
+        </header>
+
+        <div class="v2-top-card">
+          <div class="v2-photo-column">
+            <div class="profile-photo-large v2-photo" id="profilePhotoBox"><img id="profilePhoto" alt="Personnel photo" class="profile-photo-image hidden"><span id="profileInitials">--</span></div>
+            <button id="addPhotoButton" class="add-photo-button v2-add-photo" type="button">+ Add Photo</button>
+            <div id="photoStatus" class="photo-status"></div>
+          </div>
+
+          <section class="v2-section v2-summary-card">
+            <div class="v2-section-title">PERSONNEL PROFILE</div>
+            <div class="v2-summary-grid">
+              <div><span>Name:</span><strong id="profileName">—</strong></div>
+              <div><span>Badge No:</span><strong id="profileBadgeValue">—</strong></div>
+              <div><span>ID No:</span><strong id="profileIdNumber">—</strong></div>
+              <div><span>Rank:</span><strong id="profileRank">—</strong></div>
+              <div><span>Classification:</span><strong id="profileClassificationOffice">—</strong></div>
+              <div><span>Personnel Status:</span><strong id="profilePersonnelStatus">—</strong></div>
+              <div class="v2-hidden-bindings"><span>Office:</span><strong id="profileOffice">—</strong></div>
+              <div class="v2-hidden-bindings"><span>Camp:</span><strong id="profileCamp">—</strong></div>
+              <div class="v2-hidden-bindings"><span>Rank office:</span><strong id="profileRankOffice">—</strong></div>
+              <div class="v2-hidden-bindings"><span>Type:</span><strong id="profileType">—</strong></div>
+            </div>
+          </section>
+        </div>
+
+        <section class="v2-section">
+          <div class="v2-section-title">PERSONNEL INFORMATION</div>
+          <div class="v2-two-col">
+            <div class="v2-detail-list">
+              <div><span>Civil Status:</span><strong id="profileCivilStatus">—</strong></div>
+              <div><span>Gender:</span><strong id="profileGender">—</strong></div>
+              <div><span>Citizenship:</span><strong id="profileCitizenship">—</strong></div>
+              <div><span>Birthdate:</span><strong id="profileBirthdate">—</strong></div>
+              <div><span>Age:</span><strong id="profileAge">—</strong></div>
+              <div><span>Place of Birth:</span><strong id="profilePlaceOfBirth">—</strong></div>
+            </div>
+            <div class="v2-detail-list">
+              <div><span>Religion:</span><strong id="profileReligion">—</strong></div>
+              <div><span>Blood Type:</span><strong id="profileBloodType">—</strong></div>
+              <div><span>Height:</span><strong id="profileHeight">—</strong></div>
+              <div><span>Weight:</span><strong id="profileWeight">—</strong></div>
+              <div><span>Email:</span><strong id="profileEmail">—</strong></div>
+              <div><span>TIN:</span><strong id="profileTin">—</strong></div>
+            </div>
+          </div>
+          <div class="v2-wide-row"><span>Highest Attained Education:</span><strong id="profileEducation">—</strong></div>
+          <div class="v2-wide-row"><span>Home Address:</span><strong id="profileAddress">—</strong></div>
+        </section>
+
+        <section class="v2-section">
+          <div class="v2-section-title">EMERGENCY CONTACT</div>
+          <div class="v2-two-col">
+            <div class="v2-detail-list">
+              <div><span>Contact Person:</span><strong id="profileEmergencyContact">—</strong></div>
+              <div><span>Relationship:</span><strong id="profileEmergencyRelationship">—</strong></div>
+            </div>
+            <div class="v2-detail-list">
+              <div><span>Contact Number:</span><strong id="profileEmergencyNumber">—</strong></div>
+              <div><span>Address:</span><strong id="profileEmergencyAddress">—</strong></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="v2-section">
+          <div class="v2-section-title">FAMILY BACKGROUND</div>
+          <div class="v2-family-grid">
+            <div class="v2-family-card"><div><span>Father:</span><strong id="profileFatherName">—</strong></div><div><span>Occupation:</span><strong>—</strong></div><div><span>Home Address:</span><strong id="profileFatherAddress">—</strong></div></div>
+            <div class="v2-family-card"><div><span>Mother:</span><strong id="profileMotherName">—</strong></div><div><span>Occupation:</span><strong>—</strong></div><div><span>Home Address:</span><strong id="profileMotherAddress">—</strong></div></div>
+            <div class="v2-family-card v2-spouse-card"><div><span>Spouse:</span><strong>—</strong></div><div><span>Occupation:</span><strong>—</strong></div><div><span>Home Address:</span><strong>—</strong></div></div>
+          </div>
+        </section>
+
+        <section class="v2-section">
+          <div class="v2-section-title">COMMENDATIONS / RECOGNITIONS</div>
+          <div class="v2-placeholder">No commendation records yet.</div>
+        </section>
+
+        <section class="v2-section">
+          <div class="v2-section-title">OFFICE MOVEMENT HISTORY</div>
+          <table class="v2-table"><thead><tr><th>#</th><th>From Office</th><th>To Office</th><th>Position</th><th>From Date</th><th>To Date</th><th>Remarks</th></tr></thead><tbody><tr><td colspan="7">No office movement records yet.</td></tr></tbody></table>
+        </section>
+
+        <section class="v2-section">
+          <div class="v2-section-title">MEMO</div>
+          <table class="v2-table"><thead><tr><th>Doc No.</th><th>Title</th><th>Type</th><th>Date</th></tr></thead><tbody><tr><td colspan="4">No memo records yet.</td></tr></tbody></table>
+        </section>
+
+        <footer class="v2-footer"><span>PREPARED BY: ____________________</span><span>DATE GENERATED: <span id="profileGeneratedDate">—</span></span></footer>
+      </article>
+    </div>
+  </div>
+
+  <script src="../ui/app.js"></script>
+</body>
+</html>
