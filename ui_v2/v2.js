@@ -154,7 +154,12 @@ window.addEventListener('pywebviewready',()=>{
   const frame=v2Frame();
   if(frame){
     frame.addEventListener('wheel',event=>{
-      if(event.shiftKey&&!event.ctrlKey){
+      if(event.ctrlKey){
+        event.preventDefault();
+        setV2Zoom(v2Zoom + (event.deltaY < 0 ? V2_ZOOM_STEP : -V2_ZOOM_STEP));
+        return;
+      }
+      if(event.shiftKey){
         event.preventDefault();
         frame.scrollLeft+=event.deltaY||event.deltaX;
       }
