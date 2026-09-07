@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import re
 import sys
-import webbrowser
 from pathlib import Path
 
 import webview
@@ -12,8 +11,7 @@ from src.google_sheet_sync import sync_google_sheet
 from src.personnel_service import PersonnelService
 from src.photo_service import get_drive_photo_data_url
 from src.profile_pdf import generate_profile_pdf
-
-GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1SMbMfK-2T5LroHcycjUbf__pwAYQ6wtUHQocl2EoxmU/edit#gid=0"
+from src.profile_photo_upload import upload_profile_photo
 
 
 def _resource_root() -> Path:
@@ -25,11 +23,25 @@ def _resource_root() -> Path:
 
 ROOT_DIR = _resource_root()
 UI_FILE = ROOT_DIR / "ui" / "index.html"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1SMbMfK-2T5LroHcycjUbf__pwAYQ6wtUHQocl2EoxmU/edit#gid=0"
 
 
 def _safe_filename(value: str) -> str:
     cleaned = re.sub(r"[^A-Za-z0-9._ -]+", "", value).strip()
     return cleaned or "Personnel Profile"
+
+
+def _full_name(person: dict) -> str:
+    return " ".join(
+        str(part).strip()
+        for part in (
+            person.get("first_name"),
+            person.get("middle_name"),
+            person.get("last_name"),
+            person.get("suffix"),
+        )
+        if part and str(part).strip()
+    )
 
 
 class Api:
@@ -54,22 +66,70 @@ class Api:
             cache_key=str(person.get("badge_number") or badge_number),
         )
 
+    def add_profile_photo(self, badge_number):
+        person = self.personnel.get_profile(str(badge_number))
+        if not person:
+            return {"ok": False, "message": "Personnel record not found."}
+
+        try:
+            import tkinter as tk
+            from tkinter import filedialog
+
+            root = tk.Tk()
+            root.withdraw()
+            root.attributes("-topmost", True)
+            path = filedialog.askopenfilename(
+                parent=root,
+                title="Select Personnel Photo",
+                filetypes=[
+                    ("Image files", "*.jpg *.jpeg *.png *.webp"),
+                    ("JPEG", "*.jpg *.jpeg"),
+                    ("PNG", "*.png"),
+                    ("WebP", "*.webp"),
+                ],
+            )
+            root.destroy()
+        except Exception as exc:
+            return {"ok": False, "message": f"Could not open photo picker: {exc}"}
+
+        if not path:
+            return {"ok": False, "cancelled": True, "message": "Photo selection cancelled."}
+
+        try:
+            result = upload_profile_photo(
+                image_path=path,
+                badge_number=str(person.get("badge_number") or badge_number),
+                rank=str(person.get("rank") or ""),
+                full_name=_full_name(person),
+                source_order=person.get("source_order"),
+            )
+            self.personnel.update_drive_file_id(str(badge_number), result["file_id"])
+            return {
+                "ok": True,
+                **result,
+                "message": "Photo uploaded to Drive and DRIVEFILEID updated in Google Sheets.",
+            }
+        except Exception as exc:
+            return {"ok": False, "message": str(exc)}
+
     def get_filters(self):
         return self.personnel.filters()
 
     def get_stats(self):
         return self.personnel.stats()
 
-    def open_google_sheet(self):
-        try:
-            opened = webbrowser.open(GOOGLE_SHEET_URL, new=2)
-            return {"ok": bool(opened), "url": GOOGLE_SHEET_URL}
-        except Exception as exc:
-            return {"ok": False, "message": str(exc), "url": GOOGLE_SHEET_URL}
-
     def sync_google_sheet(self):
         try:
             return sync_google_sheet(DB_PATH)
+        except Exception as exc:
+            return {"ok": False, "message": str(exc)}
+
+    def open_google_sheet(self):
+        try:
+            import webbrowser
+
+            opened = webbrowser.open(SHEET_URL, new=2)
+            return {"ok": bool(opened), "url": SHEET_URL}
         except Exception as exc:
             return {"ok": False, "message": str(exc)}
 
