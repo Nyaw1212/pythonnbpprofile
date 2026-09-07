@@ -128,6 +128,14 @@ class PersonnelService:
             ).fetchone()
         return dict(row) if row else None
 
+    def update_drive_file_id(self, badge_number: str, drive_file_id: str) -> bool:
+        with connect(self.db_path) as connection:
+            cursor = connection.execute(
+                "UPDATE personnel SET drive_file_id = ? WHERE badge_number = ?",
+                (str(drive_file_id).strip(), str(badge_number)),
+            )
+        return cursor.rowcount > 0
+
     def filters(self) -> dict[str, list[str]]:
         with connect(self.db_path) as connection:
             result = {}
