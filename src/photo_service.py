@@ -107,6 +107,25 @@ def get_drive_photo_data_url(
         except Exception as exc:
             last_error = str(exc)
 
+    # Newly uploaded personnel photos are private by default. If the user has
+    # already authorized the Lookup app, fetch the image through Drive API.
+    try:
+        from .profile_photo_upload import download_private_drive_image
+
+        private_image = download_private_drive_image(file_id)
+        if private_image:
+            content, mime_type = private_image
+            if content and mime_type.startswith("image/"):
+                _write_cache(cache_key, content, mime_type)
+                return {
+                    "ok": True,
+                    "data_url": _as_data_url(content, mime_type),
+                    "cached": False,
+                    "authenticated": True,
+                }
+    except Exception as exc:
+        last_error = str(exc)
+
     cached = _read_cache(cache_key)
     if cached:
         return {"ok": True, "data_url": cached, "cached": True, "stale": True}
