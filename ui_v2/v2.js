@@ -3,6 +3,35 @@ const V2_ZOOM_MIN = 0.5;
 const V2_ZOOM_MAX = 1.5;
 const V2_ZOOM_STEP = 0.1;
 
+const V2_RANKS={
+  CO1:{name:'Corrections Officer I',classification:'Non-Commissioned',type:'CORRECTIONS OFFICER'},
+  CO2:{name:'Corrections Officer II',classification:'Non-Commissioned',type:'CORRECTIONS OFFICER'},
+  CO3:{name:'Corrections Officer III',classification:'Non-Commissioned',type:'CORRECTIONS OFFICER'},
+  CSO1:{name:'Corrections Senior Officer I',classification:'Non-Commissioned',type:'CORRECTIONS OFFICER'},
+  CSO2:{name:'Corrections Senior Officer II',classification:'Non-Commissioned',type:'CORRECTIONS OFFICER'},
+  CSO3:{name:'Corrections Senior Officer III',classification:'Non-Commissioned',type:'CORRECTIONS OFFICER'},
+  CSO4:{name:'Corrections Senior Officer IV',classification:'Non-Commissioned',type:'CORRECTIONS OFFICER'},
+  CINSP:{name:'Corrections Inspector',classification:'Commissioned',type:'CORRECTIONS OFFICER'},
+  CSINSP:{name:'Corrections Senior Inspector',classification:'Commissioned',type:'CORRECTIONS OFFICER'},
+  CCINSP:{name:'Corrections Chief Inspector',classification:'Commissioned',type:'CORRECTIONS OFFICER'},
+  CSUPT:{name:'Corrections Superintendent',classification:'Commissioned',type:'CORRECTIONS OFFICER'},
+  CSSUPT:{name:'Corrections Senior Superintendent',classification:'Commissioned',type:'CORRECTIONS OFFICER'},
+  CCSUPT:{name:'Corrections Chief Superintendent',classification:'Commissioned',type:'CORRECTIONS OFFICER'},
+  CTO1:{name:'Corrections Technical Officer I',classification:'Non-Commissioned',type:'CORRECTIONS TECHNICAL OFFICER'},
+  CTO2:{name:'Corrections Technical Officer II',classification:'Non-Commissioned',type:'CORRECTIONS TECHNICAL OFFICER'},
+  CTO3:{name:'Corrections Technical Officer III',classification:'Non-Commissioned',type:'CORRECTIONS TECHNICAL OFFICER'},
+  CTSO1:{name:'Corrections Technical Senior Officer I',classification:'Non-Commissioned',type:'CORRECTIONS TECHNICAL OFFICER'},
+  CTSO2:{name:'Corrections Technical Senior Officer II',classification:'Non-Commissioned',type:'CORRECTIONS TECHNICAL OFFICER'},
+  CTSO3:{name:'Corrections Technical Senior Officer III',classification:'Non-Commissioned',type:'CORRECTIONS TECHNICAL OFFICER'},
+  CTSO4:{name:'Corrections Technical Senior Officer IV',classification:'Non-Commissioned',type:'CORRECTIONS TECHNICAL OFFICER'},
+  CTINSP:{name:'Corrections Technical Inspector',classification:'Commissioned',type:'CORRECTIONS TECHNICAL OFFICER'},
+  CTSINSP:{name:'Corrections Technical Senior Inspector',classification:'Commissioned',type:'CORRECTIONS TECHNICAL OFFICER'},
+  CTCINSP:{name:'Corrections Technical Chief Inspector',classification:'Commissioned',type:'CORRECTIONS TECHNICAL OFFICER'},
+  CTSUPT:{name:'Corrections Technical Superintendent',classification:'Commissioned',type:'CORRECTIONS TECHNICAL OFFICER'},
+  CTSSUPT:{name:'Corrections Technical Senior Superintendent',classification:'Commissioned',type:'CORRECTIONS TECHNICAL OFFICER'},
+  CTCSUPT:{name:'Corrections Technical Chief Superintendent',classification:'Commissioned',type:'CORRECTIONS TECHNICAL OFFICER'}
+};
+
 function applyV2Zoom(){
   const sheet=document.querySelector('.v2-profile-sheet');
   const value=document.getElementById('zoomResetButton');
@@ -25,6 +54,23 @@ function normalizeV2PersonnelStatus(value){
   return text||'—';
 }
 
+function applyV2RankPresentation(person){
+  const code=String(person.rank||'').trim().toUpperCase();
+  const mapped=V2_RANKS[code];
+  const rank=document.getElementById('profileRank');
+  const classification=document.getElementById('profileClassificationOffice');
+  const type=document.getElementById('profileType');
+  if(mapped){
+    if(rank)rank.textContent=mapped.name;
+    if(classification)classification.textContent=mapped.classification;
+    if(type)type.textContent=mapped.type;
+  }else{
+    if(rank)rank.textContent=person.rank||'—';
+    if(classification)classification.textContent=person.classification||'—';
+    if(type)type.textContent=person.personnel_type||'—';
+  }
+}
+
 async function hydrateV2ProfileExtras(){
   try{
     if(typeof state==='undefined'||!state.currentBadge)return;
@@ -34,6 +80,7 @@ async function hydrateV2ProfileExtras(){
     if(batch)batch.textContent=person.batch_name||'—';
     const status=document.getElementById('profilePersonnelStatus');
     if(status)status.textContent=normalizeV2PersonnelStatus(person.personnel_status);
+    applyV2RankPresentation(person);
   }catch(error){/* Keep profile usable even if optional V2 fields fail. */}
 }
 
@@ -64,6 +111,8 @@ document.addEventListener('keydown',event=>{
 
 window.addEventListener('pywebviewready',()=>{
   setV2Zoom(1);
+  const subtitle=document.querySelector('.v2-brand-header p');
+  if(subtitle)subtitle.textContent='MOVEMENT TRACKING';
   const modal=document.getElementById('profileModal');
   if(modal){
     new MutationObserver(()=>{
