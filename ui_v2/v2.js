@@ -36,6 +36,15 @@ const V2_RANKS={
 
 function v2Frame(){return document.querySelector('.v2-modal-frame');}
 
+function setV2Text(id,value){
+  const node=document.getElementById(id);
+  if(node)node.textContent=(value===null||value===undefined||String(value).trim()==='')?'—':String(value);
+}
+
+function setV2Node(node,value){
+  if(node)node.textContent=(value===null||value===undefined||String(value).trim()==='')?'—':String(value);
+}
+
 function applyV2Zoom(){
   const sheet=document.querySelector('.v2-profile-sheet');
   const value=document.getElementById('zoomResetButton');
@@ -100,21 +109,70 @@ function applyV2RankPresentation(person){
   }
 }
 
+function hydrateV2Family(person){
+  setV2Text('profileFatherName',person.father_name);
+  setV2Text('profileFatherAddress',person.father_address);
+  setV2Text('profileMotherName',person.mother_name);
+  setV2Text('profileMotherAddress',person.mother_address);
+
+  const cards=document.querySelectorAll('.v2-family-card');
+  if(cards[0]){
+    const values=cards[0].querySelectorAll('strong');
+    setV2Node(values[0],person.father_name);
+    setV2Node(values[1],person.father_occupation);
+    setV2Node(values[2],person.father_address);
+  }
+  if(cards[1]){
+    const values=cards[1].querySelectorAll('strong');
+    setV2Node(values[0],person.mother_name);
+    setV2Node(values[1],person.mother_occupation);
+    setV2Node(values[2],person.mother_address);
+  }
+  if(cards[2]){
+    const values=cards[2].querySelectorAll('strong');
+    setV2Node(values[0],person.spouse_name);
+    setV2Node(values[1],person.spouse_occupation);
+    setV2Node(values[2],person.spouse_address);
+  }
+}
+
+function hydrateV2Education(person){
+  const rows=document.querySelectorAll('.v2-education-table tbody tr');
+  const data=[
+    [person.elementary_school,person.elementary_address,person.elementary_year_graduated],
+    [person.high_school,person.high_school_address,person.high_school_year_graduated],
+    [person.college,person.college_address,person.college_year_graduated],
+    [person.graduate_studies,person.graduate_studies_address,person.graduate_studies_year_graduated]
+  ];
+  rows.forEach((row,index)=>{
+    const cells=row.querySelectorAll('td');
+    if(!cells.length||!data[index])return;
+    setV2Node(cells[0],data[index][0]);
+    setV2Node(cells[1],data[index][1]);
+    setV2Node(cells[2],data[index][2]);
+  });
+}
+
 async function hydrateV2ProfileExtras(){
   try{
     if(typeof state==='undefined'||!state.currentBadge)return;
     const person=await pywebview.api.get_profile(String(state.currentBadge));
     if(!person)return;
-    const batch=document.getElementById('profileBatchName');
-    if(batch)batch.textContent=person.batch_name||'—';
-    const entrance=document.getElementById('profileDateEntranceDuty');
-    if(entrance)entrance.textContent=formatV2Date(person.date_entrance_duty);
-    const status=document.getElementById('profilePersonnelStatus');
-    if(status)status.textContent=normalizeV2PersonnelStatus(person.personnel_status);
-    const office=document.getElementById('profileCurrentOffice');
-    if(office)office.textContent=person.office||'—';
-    const camp=document.getElementById('profileCurrentCamp');
-    if(camp)camp.textContent=person.camp||'—';
+
+    setV2Text('profileBatchName',person.batch_name);
+    setV2Text('profileDateEntranceDuty',formatV2Date(person.date_entrance_duty));
+    setV2Text('profilePersonnelStatus',normalizeV2PersonnelStatus(person.personnel_status));
+    setV2Text('profileCurrentOffice',person.office);
+    setV2Text('profileCurrentCamp',person.camp);
+
+    if(person.home_address)setV2Text('profileAddress',person.home_address);
+    setV2Text('profileEmergencyContact',person.emergency_contact);
+    setV2Text('profileEmergencyRelationship',person.emergency_relationship);
+    setV2Text('profileEmergencyNumber',person.emergency_number);
+    setV2Text('profileEmergencyAddress',person.emergency_address);
+
+    hydrateV2Family(person);
+    hydrateV2Education(person);
     applyV2RankPresentation(person);
   }catch(error){/* Keep profile usable even if optional V2 fields fail. */}
 }
