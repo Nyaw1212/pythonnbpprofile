@@ -12,6 +12,7 @@ DB_PATH = DATA_DIR / "personnel.db"
 PROFILE_FIELDS = {
     "id_number": "TEXT",
     "batch_name": "TEXT",
+    "date_entrance_duty": "TEXT",
     "birthdate": "TEXT",
     "place_of_birth": "TEXT",
     "civil_status": "TEXT",
@@ -62,6 +63,7 @@ CREATE TABLE IF NOT EXISTS personnel (
     drive_file_id TEXT,
     id_number TEXT,
     batch_name TEXT,
+    date_entrance_duty TEXT,
     birthdate TEXT,
     place_of_birth TEXT,
     civil_status TEXT,
