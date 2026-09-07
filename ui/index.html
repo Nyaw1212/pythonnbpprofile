@@ -13,7 +13,7 @@
       <div class="sidebar-brand"><div class="brand-mark">NBP</div><div><div class="brand-title">Personnel</div><div class="brand-subtitle">Lookup</div></div></div>
       <div class="sync-chip"><span id="syncDot"></span><span id="syncStatus">Local database</span></div>
       <button id="syncButton" class="sidebar-sync" type="button">↻ Sync Google Sheet</button>
-      <button id="openSheetButton" class="sidebar-sync" type="button">↗ Open Google Sheet</button>
+      <button id="openSheetButton" class="sidebar-open-sheet" type="button">↗ Open Google Sheet</button>
       <div id="syncMeta" class="sync-meta">Uses local data when offline.</div>
       <div class="sidebar-filters">
         <button id="clearButton" class="sidebar-clear" type="button">Clear filters</button>
@@ -41,6 +41,8 @@
         <div class="profile-main-grid">
           <aside class="profile-identity">
             <div class="profile-photo-large" id="profilePhotoBox"><img id="profilePhoto" alt="Personnel photo" class="profile-photo-image hidden"><span id="profileInitials">--</span></div>
+            <button id="addPhotoButton" class="add-photo-button" type="button">+ Add Photo</button>
+            <div id="photoStatus" class="photo-status"></div>
             <h3 id="profileName">—</h3><div id="profileRank" class="identity-rank">—</div>
 
             <div class="identity-list">
