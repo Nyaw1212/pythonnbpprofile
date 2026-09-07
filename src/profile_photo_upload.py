@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import io
-import json
 import mimetypes
 from pathlib import Path
 
@@ -15,8 +14,8 @@ from .runtime_paths import app_root
 
 SPREADSHEET_ID = "1SMbMfK-2T5LroHcycjUbf__pwAYQ6wtUHQocl2EoxmU"
 SHEET_NAME = "LIST"
-PHOTO_ROOT_FOLDER_ID = "1JL6uRUmvAov6LFPOyYNKt6ePRGbLS8u0"
-PHOTO_FOLDER_NAME = "PROFILE PHOTOS"
+PERSONNEL_FILES_ROOT_ID = "1JL6uRUmvAov6LFPOyYNKt6ePRGbLS8u0"
+PROFILE_PHOTO_FOLDER_NAME = "PROFILE PHOTO"
 
 CREDENTIALS_DIR = app_root() / "credentials"
 CLIENT_FILE = CREDENTIALS_DIR / "oauth_client.json"
@@ -28,7 +27,7 @@ SCOPES = [
 
 _DRIVE = None
 _SHEETS = None
-_PHOTO_FOLDER_ID = None
+_FOLDER_CACHE: dict[tuple[str, str], str] = {}
 
 
 def _credentials() -> Credentials:
@@ -71,33 +70,46 @@ def _escape_query(value: str) -> str:
     return value.replace("\\", "\\\\").replace("'", "\\'")
 
 
-def _profile_photo_folder_id() -> str:
-    global _PHOTO_FOLDER_ID
-    if _PHOTO_FOLDER_ID:
-        return _PHOTO_FOLDER_ID
+def _clean_folder_name(value: str) -> str:
+    return " ".join(str(value or "").split()).strip() or "Unknown"
+
+
+def _get_or_create_folder(parent_id: str, name: str) -> str:
+    name = _clean_folder_name(name)
+    cache_key = (parent_id, name.casefold())
+    cached = _FOLDER_CACHE.get(cache_key)
+    if cached:
+        return cached
 
     service = drive_service()
-    name = _escape_query(PHOTO_FOLDER_NAME)
+    safe_name = _escape_query(name)
     query = (
-        f"'{PHOTO_ROOT_FOLDER_ID}' in parents and trashed = false and "
-        f"mimeType = 'application/vnd.google-apps.folder' and name = '{name}'"
+        f"'{parent_id}' in parents and trashed = false and "
+        f"mimeType = 'application/vnd.google-apps.folder' and name = '{safe_name}'"
     )
     result = service.files().list(q=query, fields="files(id,name)", pageSize=10).execute()
     files = result.get("files", [])
     if files:
-        _PHOTO_FOLDER_ID = files[0]["id"]
-        return _PHOTO_FOLDER_ID
+        folder_id = files[0]["id"]
+    else:
+        created = service.files().create(
+            body={
+                "name": name,
+                "mimeType": "application/vnd.google-apps.folder",
+                "parents": [parent_id],
+            },
+            fields="id",
+        ).execute()
+        folder_id = created["id"]
 
-    created = service.files().create(
-        body={
-            "name": PHOTO_FOLDER_NAME,
-            "mimeType": "application/vnd.google-apps.folder",
-            "parents": [PHOTO_ROOT_FOLDER_ID],
-        },
-        fields="id",
-    ).execute()
-    _PHOTO_FOLDER_ID = created["id"]
-    return _PHOTO_FOLDER_ID
+    _FOLDER_CACHE[cache_key] = folder_id
+    return folder_id
+
+
+def _profile_photo_folder_id(rank: str, full_name: str) -> str:
+    person_folder_name = _clean_folder_name(f"{rank} {full_name}")
+    person_folder_id = _get_or_create_folder(PERSONNEL_FILES_ROOT_ID, person_folder_name)
+    return _get_or_create_folder(person_folder_id, PROFILE_PHOTO_FOLDER_NAME)
 
 
 def _column_letter(index_zero_based: int) -> str:
@@ -132,26 +144,38 @@ def upload_profile_photo(*, image_path: str | Path, badge_number: str, rank: str
     if not mime.startswith("image/"):
         raise ValueError("Please select an image file.")
 
+    # Verify Sheets access before uploading anything to Drive. This prevents orphaned
+    # photo files when the Sheets API is disabled or the account lacks write access.
+    column = _drivefile_column()
+    sheet_row = int(source_order) + 1
+
     extension = path.suffix.lower() or ".jpg"
-    clean_name = " ".join(str(full_name or "").split())
+    clean_name = _clean_folder_name(full_name)
     filename = f"{badge_number} - {rank} {clean_name}".strip() + extension
 
     drive = drive_service()
+    destination_folder_id = _profile_photo_folder_id(rank, full_name)
     uploaded = drive.files().create(
-        body={"name": filename, "parents": [_profile_photo_folder_id()]},
+        body={"name": filename, "parents": [destination_folder_id]},
         media_body=MediaFileUpload(str(path), mimetype=mime, resumable=False),
         fields="id,name,webViewLink,mimeType",
     ).execute()
     file_id = uploaded["id"]
 
-    column = _drivefile_column()
-    sheet_row = int(source_order) + 1
-    sheets_service().spreadsheets().values().update(
-        spreadsheetId=SPREADSHEET_ID,
-        range=f"{SHEET_NAME}!{column}{sheet_row}",
-        valueInputOption="RAW",
-        body={"values": [[file_id]]},
-    ).execute()
+    try:
+        sheets_service().spreadsheets().values().update(
+            spreadsheetId=SPREADSHEET_ID,
+            range=f"{SHEET_NAME}!{column}{sheet_row}",
+            valueInputOption="RAW",
+            body={"values": [[file_id]]},
+        ).execute()
+    except Exception:
+        # Keep Drive and Sheet state consistent if the sheet write unexpectedly fails.
+        try:
+            drive.files().delete(fileId=file_id).execute()
+        except Exception:
+            pass
+        raise
 
     return {
         "ok": True,
@@ -159,6 +183,8 @@ def upload_profile_photo(*, image_path: str | Path, badge_number: str, rank: str
         "filename": uploaded.get("name", filename),
         "web_view_link": uploaded.get("webViewLink"),
         "sheet_row": sheet_row,
+        "person_folder": _clean_folder_name(f"{rank} {full_name}"),
+        "photo_folder": PROFILE_PHOTO_FOLDER_NAME,
     }
 
 
