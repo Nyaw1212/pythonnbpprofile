@@ -54,6 +54,13 @@ function normalizeV2PersonnelStatus(value){
   return text||'—';
 }
 
+function formatV2Date(value){
+  if(!value)return '—';
+  const parsed=new Date(String(value));
+  if(Number.isNaN(parsed.getTime()))return String(value);
+  return parsed.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+}
+
 function applyV2RankPresentation(person){
   const code=String(person.rank||'').trim().toUpperCase();
   const mapped=V2_RANKS[code];
@@ -78,8 +85,14 @@ async function hydrateV2ProfileExtras(){
     if(!person)return;
     const batch=document.getElementById('profileBatchName');
     if(batch)batch.textContent=person.batch_name||'—';
+    const entrance=document.getElementById('profileDateEntranceDuty');
+    if(entrance)entrance.textContent=formatV2Date(person.date_entrance_duty);
     const status=document.getElementById('profilePersonnelStatus');
     if(status)status.textContent=normalizeV2PersonnelStatus(person.personnel_status);
+    const office=document.getElementById('profileCurrentOffice');
+    if(office)office.textContent=person.office||'—';
+    const camp=document.getElementById('profileCurrentCamp');
+    if(camp)camp.textContent=person.camp||'—';
     applyV2RankPresentation(person);
   }catch(error){/* Keep profile usable even if optional V2 fields fail. */}
 }
@@ -111,8 +124,6 @@ document.addEventListener('keydown',event=>{
 
 window.addEventListener('pywebviewready',()=>{
   setV2Zoom(1);
-  const subtitle=document.querySelector('.v2-brand-header p');
-  if(subtitle)subtitle.textContent='MOVEMENT TRACKING';
   const modal=document.getElementById('profileModal');
   if(modal){
     new MutationObserver(()=>{
