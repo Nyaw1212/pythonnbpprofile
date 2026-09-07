@@ -34,7 +34,20 @@
   <div id="profileModal" class="modal hidden" aria-hidden="true">
     <div class="modal-backdrop" data-close-modal></div>
     <div class="profile-modal-frame v2-modal-frame">
-      <div class="profile-toolbar"><span>A4 Personnel Profile — V2</span><div class="profile-toolbar-actions"><span id="pdfStatus" class="pdf-status"></span><button id="printProfileButton" class="print-profile-button" type="button">Print</button><button id="savePdfButton" class="save-pdf-button" type="button">Save PDF</button><button class="close-button profile-close" data-close-modal aria-label="Close">×</button></div></div>
+      <div class="profile-toolbar">
+        <span>A4 Personnel Profile — V2</span>
+        <div class="profile-toolbar-actions">
+          <div class="v2-zoom-controls" aria-label="Profile preview zoom">
+            <button id="zoomOutButton" class="v2-zoom-button" type="button" aria-label="Zoom out">−</button>
+            <button id="zoomResetButton" class="v2-zoom-value" type="button" title="Reset zoom">100%</button>
+            <button id="zoomInButton" class="v2-zoom-button" type="button" aria-label="Zoom in">+</button>
+          </div>
+          <span id="pdfStatus" class="pdf-status"></span>
+          <button id="printProfileButton" class="print-profile-button" type="button">Print</button>
+          <button id="savePdfButton" class="save-pdf-button" type="button">Save PDF</button>
+          <button class="close-button profile-close" data-close-modal aria-label="Close">×</button>
+        </div>
+      </div>
 
       <article class="profile-sheet v2-profile-sheet">
         <div class="v2-print-letterhead">
@@ -71,80 +84,17 @@
           </section>
         </div>
 
-        <section class="v2-section">
-          <div class="v2-section-title">PERSONNEL INFORMATION</div>
-          <div class="v2-two-col">
-            <div class="v2-detail-list">
-              <div><span>Civil Status:</span><strong id="profileCivilStatus">—</strong></div>
-              <div><span>Gender:</span><strong id="profileGender">—</strong></div>
-              <div><span>Citizenship:</span><strong id="profileCitizenship">—</strong></div>
-              <div><span>Birthdate:</span><strong id="profileBirthdate">—</strong></div>
-              <div><span>Age:</span><strong id="profileAge">—</strong></div>
-              <div><span>Place of Birth:</span><strong id="profilePlaceOfBirth">—</strong></div>
-            </div>
-            <div class="v2-detail-list">
-              <div><span>Religion:</span><strong id="profileReligion">—</strong></div>
-              <div><span>Blood Type:</span><strong id="profileBloodType">—</strong></div>
-              <div><span>Height:</span><strong id="profileHeight">—</strong></div>
-              <div><span>Weight:</span><strong id="profileWeight">—</strong></div>
-              <div><span>Email:</span><strong id="profileEmail">—</strong></div>
-              <div><span>TIN:</span><strong id="profileTin">—</strong></div>
-            </div>
-          </div>
-          <div class="v2-wide-row"><span>Highest Attained Education:</span><strong id="profileEducation">—</strong></div>
-          <div class="v2-wide-row"><span>Home Address:</span><strong id="profileAddress">—</strong></div>
-        </section>
+        <section class="v2-section"><div class="v2-section-title">PERSONNEL INFORMATION</div><div class="v2-two-col"><div class="v2-detail-list"><div><span>Civil Status:</span><strong id="profileCivilStatus">—</strong></div><div><span>Gender:</span><strong id="profileGender">—</strong></div><div><span>Citizenship:</span><strong id="profileCitizenship">—</strong></div><div><span>Birthdate:</span><strong id="profileBirthdate">—</strong></div><div><span>Age:</span><strong id="profileAge">—</strong></div><div><span>Place of Birth:</span><strong id="profilePlaceOfBirth">—</strong></div></div><div class="v2-detail-list"><div><span>Religion:</span><strong id="profileReligion">—</strong></div><div><span>Blood Type:</span><strong id="profileBloodType">—</strong></div><div><span>Height:</span><strong id="profileHeight">—</strong></div><div><span>Weight:</span><strong id="profileWeight">—</strong></div><div><span>Email:</span><strong id="profileEmail">—</strong></div><div><span>TIN:</span><strong id="profileTin">—</strong></div></div></div><div class="v2-wide-row"><span>Highest Attained Education:</span><strong id="profileEducation">—</strong></div><div class="v2-wide-row"><span>Home Address:</span><strong id="profileAddress">—</strong></div></section>
 
-        <section class="v2-section">
-          <div class="v2-section-title">EMERGENCY CONTACT</div>
-          <div class="v2-two-col">
-            <div class="v2-detail-list">
-              <div><span>Contact Person:</span><strong id="profileEmergencyContact">—</strong></div>
-              <div><span>Relationship:</span><strong id="profileEmergencyRelationship">—</strong></div>
-            </div>
-            <div class="v2-detail-list">
-              <div><span>Contact Number:</span><strong id="profileEmergencyNumber">—</strong></div>
-              <div><span>Address:</span><strong id="profileEmergencyAddress">—</strong></div>
-            </div>
-          </div>
-        </section>
+        <section class="v2-section"><div class="v2-section-title">EMERGENCY CONTACT</div><div class="v2-two-col"><div class="v2-detail-list"><div><span>Contact Person:</span><strong id="profileEmergencyContact">—</strong></div><div><span>Relationship:</span><strong id="profileEmergencyRelationship">—</strong></div></div><div class="v2-detail-list"><div><span>Contact Number:</span><strong id="profileEmergencyNumber">—</strong></div><div><span>Address:</span><strong id="profileEmergencyAddress">—</strong></div></div></div></section>
 
-        <section class="v2-section">
-          <div class="v2-section-title">FAMILY BACKGROUND</div>
-          <div class="v2-family-grid">
-            <div class="v2-family-card"><div><span>Father:</span><strong id="profileFatherName">—</strong></div><div><span>Occupation:</span><strong>—</strong></div><div><span>Home Address:</span><strong id="profileFatherAddress">—</strong></div></div>
-            <div class="v2-family-card"><div><span>Mother:</span><strong id="profileMotherName">—</strong></div><div><span>Occupation:</span><strong>—</strong></div><div><span>Home Address:</span><strong id="profileMotherAddress">—</strong></div></div>
-            <div class="v2-family-card v2-spouse-card"><div><span>Spouse:</span><strong>—</strong></div><div><span>Occupation:</span><strong>—</strong></div><div><span>Home Address:</span><strong>—</strong></div></div>
-          </div>
-        </section>
+        <section class="v2-section"><div class="v2-section-title">FAMILY BACKGROUND</div><div class="v2-family-grid"><div class="v2-family-card"><div><span>Father:</span><strong id="profileFatherName">—</strong></div><div><span>Occupation:</span><strong>—</strong></div><div><span>Home Address:</span><strong id="profileFatherAddress">—</strong></div></div><div class="v2-family-card"><div><span>Mother:</span><strong id="profileMotherName">—</strong></div><div><span>Occupation:</span><strong>—</strong></div><div><span>Home Address:</span><strong id="profileMotherAddress">—</strong></div></div><div class="v2-family-card v2-spouse-card"><div><span>Spouse:</span><strong>—</strong></div><div><span>Occupation:</span><strong>—</strong></div><div><span>Home Address:</span><strong>—</strong></div></div></div></section>
 
-        <section class="v2-section">
-          <div class="v2-section-title">EDUCATIONAL BACKGROUND</div>
-          <table class="v2-table v2-education-table">
-            <thead><tr><th>School Level</th><th>Address</th><th>Year Graduated</th></tr></thead>
-            <tbody>
-              <tr><td>Elementary</td><td>—</td><td>—</td></tr>
-              <tr><td>High School</td><td>—</td><td>—</td></tr>
-              <tr><td>College</td><td>—</td><td>—</td></tr>
-              <tr><td>Graduate Studies</td><td>—</td><td>—</td></tr>
-            </tbody>
-          </table>
-        </section>
+        <section class="v2-section"><div class="v2-section-title">EDUCATIONAL BACKGROUND</div><table class="v2-table v2-education-table"><thead><tr><th>School Level</th><th>Address</th><th>Year Graduated</th></tr></thead><tbody><tr><td>Elementary</td><td>—</td><td>—</td></tr><tr><td>High School</td><td>—</td><td>—</td></tr><tr><td>College</td><td>—</td><td>—</td></tr><tr><td>Graduate Studies</td><td>—</td><td>—</td></tr></tbody></table></section>
 
-        <section class="v2-section">
-          <div class="v2-section-title">COMMENDATIONS / RECOGNITIONS</div>
-          <div class="v2-placeholder">No commendation records yet.</div>
-        </section>
-
-        <section class="v2-section">
-          <div class="v2-section-title">OFFICE MOVEMENT HISTORY</div>
-          <table class="v2-table"><thead><tr><th>#</th><th>From Office</th><th>To Office</th><th>Position</th><th>From Date</th><th>To Date</th><th>Remarks</th></tr></thead><tbody><tr><td colspan="7">No office movement records yet.</td></tr></tbody></table>
-        </section>
-
-        <section class="v2-section">
-          <div class="v2-section-title">ADMINISTRATIVE DOCUMENTS</div>
-          <table class="v2-table"><thead><tr><th>Doc No.</th><th>Title</th><th>Type</th><th>Date</th></tr></thead><tbody><tr><td colspan="4">No administrative documents recorded yet.</td></tr></tbody></table>
-        </section>
+        <section class="v2-section"><div class="v2-section-title">COMMENDATIONS / RECOGNITIONS</div><div class="v2-placeholder">No commendation records yet.</div></section>
+        <section class="v2-section"><div class="v2-section-title">OFFICE MOVEMENT HISTORY</div><table class="v2-table"><thead><tr><th>#</th><th>From Office</th><th>To Office</th><th>Position</th><th>From Date</th><th>To Date</th><th>Remarks</th></tr></thead><tbody><tr><td colspan="7">No office movement records yet.</td></tr></tbody></table></section>
+        <section class="v2-section"><div class="v2-section-title">ADMINISTRATIVE DOCUMENTS</div><table class="v2-table"><thead><tr><th>Doc No.</th><th>Title</th><th>Type</th><th>Date</th></tr></thead><tbody><tr><td colspan="4">No administrative documents recorded yet.</td></tr></tbody></table></section>
 
         <footer class="v2-footer"><span>PREPARED BY: ____________________</span><span>DATE GENERATED: <span id="profileGeneratedDate">—</span></span></footer>
       </article>
