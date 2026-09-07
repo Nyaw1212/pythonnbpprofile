@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import sys
+import webbrowser
 from pathlib import Path
 
 import webview
@@ -11,6 +12,8 @@ from src.google_sheet_sync import sync_google_sheet
 from src.personnel_service import PersonnelService
 from src.photo_service import get_drive_photo_data_url
 from src.profile_pdf import generate_profile_pdf
+
+GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1SMbMfK-2T5LroHcycjUbf__pwAYQ6wtUHQocl2EoxmU/edit#gid=0"
 
 
 def _resource_root() -> Path:
@@ -56,6 +59,13 @@ class Api:
 
     def get_stats(self):
         return self.personnel.stats()
+
+    def open_google_sheet(self):
+        try:
+            opened = webbrowser.open(GOOGLE_SHEET_URL, new=2)
+            return {"ok": bool(opened), "url": GOOGLE_SHEET_URL}
+        except Exception as exc:
+            return {"ok": False, "message": str(exc), "url": GOOGLE_SHEET_URL}
 
     def sync_google_sheet(self):
         try:
