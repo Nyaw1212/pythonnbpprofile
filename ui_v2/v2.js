@@ -2,6 +2,8 @@ let v2Zoom = 1;
 const V2_ZOOM_MIN = 0.5;
 const V2_ZOOM_MAX = 1.5;
 const V2_ZOOM_STEP = 0.1;
+const V2_PAN_STEP = 90;
+let v2PanState = { active:false, startX:0, startY:0, scrollLeft:0, scrollTop:0, pointerId:null };
 
 const V2_RANKS={
   CO1:{name:'Corrections Officer I',classification:'Non-Commissioned',type:'CORRECTIONS OFFICER'},
@@ -32,6 +34,8 @@ const V2_RANKS={
   CTCSUPT:{name:'Corrections Technical Chief Superintendent',classification:'Commissioned',type:'CORRECTIONS TECHNICAL OFFICER'}
 };
 
+function v2Frame(){return document.querySelector('.v2-modal-frame');}
+
 function applyV2Zoom(){
   const sheet=document.querySelector('.v2-profile-sheet');
   const value=document.getElementById('zoomResetButton');
@@ -44,8 +48,26 @@ function applyV2Zoom(){
 }
 
 function setV2Zoom(next){
+  const frame=v2Frame();
+  const oldZoom=v2Zoom;
+  const centerX=frame ? frame.scrollLeft + frame.clientWidth/2 : 0;
+  const centerY=frame ? frame.scrollTop + frame.clientHeight/2 : 0;
   v2Zoom=Math.min(V2_ZOOM_MAX,Math.max(V2_ZOOM_MIN,Math.round(next*10)/10));
   applyV2Zoom();
+  if(frame && oldZoom>0){
+    const ratio=v2Zoom/oldZoom;
+    requestAnimationFrame(()=>{
+      frame.scrollLeft=Math.max(0,centerX*ratio-frame.clientWidth/2);
+      frame.scrollTop=Math.max(0,centerY*ratio-frame.clientHeight/2);
+    });
+  }
+}
+
+function panV2By(dx,dy){
+  const frame=v2Frame();
+  if(!frame)return;
+  frame.scrollLeft+=dx;
+  frame.scrollTop+=dy;
 }
 
 function normalizeV2PersonnelStatus(value){
@@ -101,9 +123,7 @@ document.addEventListener('click',event=>{
   if(event.target.closest('#zoomOutButton')){event.preventDefault();setV2Zoom(v2Zoom-V2_ZOOM_STEP);return;}
   if(event.target.closest('#zoomInButton')){event.preventDefault();setV2Zoom(v2Zoom+V2_ZOOM_STEP);return;}
   if(event.target.closest('#zoomResetButton')){event.preventDefault();setV2Zoom(1);return;}
-
   if(event.target.closest('.person-row'))setTimeout(hydrateV2ProfileExtras,120);
-
   const saveButton=event.target.closest('#savePdfButton');
   if(!saveButton)return;
   event.preventDefault();
@@ -116,6 +136,12 @@ document.addEventListener('click',event=>{
 document.addEventListener('keydown',event=>{
   const modal=document.getElementById('profileModal');
   if(!modal||modal.classList.contains('hidden'))return;
+  if(event.ctrlKey&&event.shiftKey){
+    if(event.key==='ArrowLeft'){event.preventDefault();panV2By(-V2_PAN_STEP,0);return;}
+    if(event.key==='ArrowRight'){event.preventDefault();panV2By(V2_PAN_STEP,0);return;}
+    if(event.key==='ArrowUp'){event.preventDefault();panV2By(0,-V2_PAN_STEP);return;}
+    if(event.key==='ArrowDown'){event.preventDefault();panV2By(0,V2_PAN_STEP);return;}
+  }
   if(!event.ctrlKey)return;
   if(event.key==='+'||event.key==='='){event.preventDefault();setV2Zoom(v2Zoom+V2_ZOOM_STEP);}
   else if(event.key==='-'){event.preventDefault();setV2Zoom(v2Zoom-V2_ZOOM_STEP);}
@@ -125,9 +151,50 @@ document.addEventListener('keydown',event=>{
 window.addEventListener('pywebviewready',()=>{
   setV2Zoom(1);
   const modal=document.getElementById('profileModal');
+  const frame=v2Frame();
+  if(frame){
+    frame.addEventListener('wheel',event=>{
+      if(event.shiftKey&&!event.ctrlKey){
+        event.preventDefault();
+        frame.scrollLeft+=event.deltaY||event.deltaX;
+      }
+    },{passive:false});
+
+    frame.addEventListener('pointerdown',event=>{
+      if(event.button!==0)return;
+      if(event.target.closest('.profile-toolbar,button,input,textarea,select,a'))return;
+      v2PanState={active:true,startX:event.clientX,startY:event.clientY,scrollLeft:frame.scrollLeft,scrollTop:frame.scrollTop,pointerId:event.pointerId};
+      frame.classList.add('v2-panning');
+      try{frame.setPointerCapture(event.pointerId);}catch(_error){}
+      event.preventDefault();
+    });
+
+    frame.addEventListener('pointermove',event=>{
+      if(!v2PanState.active)return;
+      frame.scrollLeft=v2PanState.scrollLeft-(event.clientX-v2PanState.startX);
+      frame.scrollTop=v2PanState.scrollTop-(event.clientY-v2PanState.startY);
+    });
+
+    const endPan=event=>{
+      if(!v2PanState.active)return;
+      v2PanState.active=false;
+      frame.classList.remove('v2-panning');
+      try{if(v2PanState.pointerId!==null)frame.releasePointerCapture(v2PanState.pointerId);}catch(_error){}
+      v2PanState.pointerId=null;
+    };
+    frame.addEventListener('pointerup',endPan);
+    frame.addEventListener('pointercancel',endPan);
+    frame.addEventListener('lostpointercapture',endPan);
+  }
   if(modal){
     new MutationObserver(()=>{
-      if(!modal.classList.contains('hidden'))setTimeout(hydrateV2ProfileExtras,0);
+      if(!modal.classList.contains('hidden')){
+        setTimeout(()=>{
+          hydrateV2ProfileExtras();
+          const current=v2Frame();
+          if(current){current.scrollLeft=0;current.scrollTop=0;}
+        },0);
+      }
     }).observe(modal,{attributes:true,attributeFilter:['class']});
   }
 });
