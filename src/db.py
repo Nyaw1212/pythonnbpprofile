@@ -47,15 +47,19 @@ PROFILE_FIELDS = {
     "emergency_number": "TEXT",
     "emergency_address": "TEXT",
     "elementary_school": "TEXT",
+    "elementary_course": "TEXT",
     "elementary_address": "TEXT",
     "elementary_year_graduated": "TEXT",
     "high_school": "TEXT",
+    "high_school_course": "TEXT",
     "high_school_address": "TEXT",
     "high_school_year_graduated": "TEXT",
     "college": "TEXT",
+    "college_course": "TEXT",
     "college_address": "TEXT",
     "college_year_graduated": "TEXT",
     "graduate_studies": "TEXT",
+    "graduate_studies_course": "TEXT",
     "graduate_studies_address": "TEXT",
     "graduate_studies_year_graduated": "TEXT",
 }
@@ -117,15 +121,19 @@ CREATE TABLE IF NOT EXISTS personnel (
     emergency_number TEXT,
     emergency_address TEXT,
     elementary_school TEXT,
+    elementary_course TEXT,
     elementary_address TEXT,
     elementary_year_graduated TEXT,
     high_school TEXT,
+    high_school_course TEXT,
     high_school_address TEXT,
     high_school_year_graduated TEXT,
     college TEXT,
+    college_course TEXT,
     college_address TEXT,
     college_year_graduated TEXT,
     graduate_studies TEXT,
+    graduate_studies_course TEXT,
     graduate_studies_address TEXT,
     graduate_studies_year_graduated TEXT
 );
@@ -137,8 +145,10 @@ CREATE INDEX IF NOT EXISTS idx_personnel_rank ON personnel(rank);
 """
 
 def connect(db_path: Path | str = DB_PATH) -> sqlite3.Connection:
-    path = Path(db_path); path.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(path); connection.row_factory = sqlite3.Row
+    path = Path(db_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    connection = sqlite3.connect(path)
+    connection.row_factory = sqlite3.Row
     return connection
 
 def _migrate(connection: sqlite3.Connection) -> None:
@@ -151,4 +161,5 @@ def _migrate(connection: sqlite3.Connection) -> None:
 
 def initialize(db_path: Path | str = DB_PATH) -> None:
     with connect(db_path) as connection:
-        connection.executescript(BASE_SCHEMA); _migrate(connection)
+        connection.executescript(BASE_SCHEMA)
+        _migrate(connection)
