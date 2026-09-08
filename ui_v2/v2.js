@@ -34,7 +34,26 @@ const V2_RANKS={
   CTCSUPT:{name:'Corrections Technical Chief Superintendent',classification:'Commissioned',type:'CORRECTIONS TECHNICAL OFFICER'}
 };
 
+const V2_CAMP_COLORS={
+  NBP:{background:'#1f6b45',color:'#fff'},
+  MAXIMUM:{background:'#d97706',color:'#fff'},
+  MEDIUM:{background:'#2563a6',color:'#fff'},
+  MINIMUM:{background:'#7a4b2a',color:'#fff'},
+  RDC:{background:'#d6a900',color:'#2d2500'}
+};
+
 function v2Frame(){return document.querySelector('.v2-modal-frame');}
+
+function forceV2GreenTheme(){
+  const sheet=document.querySelector('.v2-profile-sheet');
+  if(!sheet)return;
+  sheet.style.setProperty('--v2-orange','#1f6b45');
+  sheet.style.setProperty('--v2-orange-dark','#155437');
+  sheet.style.setProperty('--v2-soft','#e7f2eb');
+  sheet.style.setProperty('--v2-line','#8ab69d');
+  sheet.style.setProperty('--v2-text','#173a2a');
+  sheet.style.setProperty('--v2-accent-text','#fff');
+}
 
 function setV2Text(id,value){
   const node=document.getElementById(id);
@@ -43,6 +62,33 @@ function setV2Text(id,value){
 
 function setV2Node(node,value){
   if(node)node.textContent=(value===null||value===undefined||String(value).trim()==='')?'—':String(value);
+}
+
+function applyV2CampBadge(person){
+  const valueNode=document.getElementById('profileCurrentCamp');
+  if(!valueNode)return;
+  const row=valueNode.parentElement;
+  if(!row)return;
+  const label=row.querySelector('span');
+  if(label)label.textContent='Previous Office:';
+  valueNode.textContent=person.previous_office||'—';
+  row.style.gridTemplateColumns='39mm minmax(0,1fr) auto';
+  row.style.alignItems='center';
+
+  let badge=row.querySelector('.v2-camp-badge');
+  if(!badge){
+    badge=document.createElement('span');
+    badge.className='v2-camp-badge';
+    row.appendChild(badge);
+  }
+  const camp=String(person.camp||'').trim().toUpperCase();
+  const palette=V2_CAMP_COLORS[camp]||{background:'#6b7280',color:'#fff'};
+  badge.textContent=camp||'—';
+  Object.assign(badge.style,{
+    display:'inline-flex',alignItems:'center',justifyContent:'center',minWidth:'22mm',padding:'1.2mm 2.5mm',
+    borderRadius:'999px',background:palette.background,color:palette.color,fontSize:'8.5px',fontWeight:'900',
+    lineHeight:'1',letterSpacing:'.04em',textTransform:'uppercase',whiteSpace:'nowrap'
+  });
 }
 
 function applyV2Zoom(){
@@ -171,11 +217,12 @@ async function hydrateV2ProfileExtras(){
     const person=await pywebview.api.get_profile(String(state.currentBadge));
     if(!person)return;
 
+    forceV2GreenTheme();
     setV2Text('profileBatchName',person.batch_name);
     setV2Text('profileDateEntranceDuty',formatV2Date(person.date_entrance_duty));
     setV2Text('profilePersonnelStatus',normalizeV2PersonnelStatus(person.personnel_status));
     setV2Text('profileCurrentOffice',person.office);
-    setV2Text('profileCurrentCamp',person.camp);
+    applyV2CampBadge(person);
 
     if(person.home_address)setV2Text('profileAddress',person.home_address);
     setV2Text('profileEmergencyContact',person.emergency_contact);
@@ -220,6 +267,7 @@ document.addEventListener('keydown',event=>{
 
 window.addEventListener('pywebviewready',()=>{
   setV2Zoom(1);
+  forceV2GreenTheme();
   const modal=document.getElementById('profileModal');
   const frame=v2Frame();
   if(frame){
@@ -265,6 +313,7 @@ window.addEventListener('pywebviewready',()=>{
     new MutationObserver(()=>{
       if(!modal.classList.contains('hidden')){
         setTimeout(()=>{
+          forceV2GreenTheme();
           hydrateV2ProfileExtras();
           const current=v2Frame();
           if(current){current.scrollLeft=0;current.scrollTop=0;}
