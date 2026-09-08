@@ -16,6 +16,11 @@ function v2RelatedDate(value){
   return parsed.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
 }
 
+function v2Assignment(camp,office){
+  const parts=[camp,office].map(value=>String(value||'').trim()).filter(Boolean);
+  return parts.length?parts.join(' — '):'—';
+}
+
 function v2BuildTable(headers,rows,emptyMessage){
   const table=document.createElement('table');
   table.className='v2-table';
@@ -76,9 +81,11 @@ async function hydrateV2RelatedRecords(){
       v2BuildTable(['Date Received','Award / Title','Presented By','Remarks'],commendations,'No commendation records yet.')
     );
 
-    const movements=(data.office_movements||[]).map((item,index)=>[
-      String(index+1),
+    const officeMovements=data.office_movements||[];
+    const movements=officeMovements.map(item=>[
+      item.from_camp,
       item.from_office,
+      item.to_camp,
       item.to_office,
       item.position,
       v2RelatedDate(item.from_date),
@@ -87,8 +94,21 @@ async function hydrateV2RelatedRecords(){
     ]);
     v2ReplaceSectionBody(
       v2FindSection('OFFICE MOVEMENT HISTORY'),
-      v2BuildTable(['#','From Office','To Office','Position','From Date','To Date','Remarks'],movements,'No office movement records yet.')
+      v2BuildTable(
+        ['From Camp','From Office','To Camp','To Office','Position','From Date','To Date','Remarks'],
+        movements,
+        'No office movement records yet.'
+      )
     );
+
+    // The newest movement is the hard assignment record for the profile summary.
+    if(officeMovements.length){
+      const latest=officeMovements[0];
+      const current=v2Assignment(latest.to_camp,latest.to_office);
+      const previous=v2Assignment(latest.from_camp,latest.from_office);
+      if(current!=='—')setV2Text('profileCurrentOffice',current);
+      if(previous!=='—')setV2Text('profilePreviousOffice',previous);
+    }
 
     const admin=(data.administrative_documents||[]).map(item=>[
       item.memo_no,
