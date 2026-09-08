@@ -57,6 +57,9 @@ class Api:
     def get_profile(self, badge_number):
         return self.personnel.get_profile(str(badge_number))
 
+    def get_profile_related(self, badge_number):
+        return self.personnel.get_related_records(str(badge_number))
+
     def get_profile_photo(self, badge_number):
         person = self.personnel.get_profile(str(badge_number))
         if not person:
