@@ -120,12 +120,12 @@ function v2RepairMovementChain(rawMovements,person){
     const previous=index>0?chronological[index-1]:null;
     const next=index<chronological.length-1?chronological[index+1]:null;
 
-    if((!item.from_camp||item.from_camp==='—')&&previous&&
+    if(!item.from_camp&&previous&&
        String(previous.to_office||'').trim().toUpperCase()===String(item.from_office||'').trim().toUpperCase()){
       item.from_camp=previous.to_camp;
     }
 
-    if((!item.to_camp||item.to_camp==='—')&&next&&
+    if(!item.to_camp&&next&&
        String(item.to_office||'').trim().toUpperCase()===String(next.from_office||'').trim().toUpperCase()){
       item.to_camp=next.from_camp;
     }
@@ -134,14 +134,34 @@ function v2RepairMovementChain(rawMovements,person){
     if(!item.to_camp&&/\bNBP\b/i.test(String(item.to_office||'')))item.to_camp='NBP';
   });
 
-  if(chronological.length&&person){
-    const latest=chronological[chronological.length-1];
-    if(String(latest.to_office||'').trim().toUpperCase()===String(person.office||'').trim().toUpperCase()){
-      latest.to_camp=v2NormalizeCamp(person.camp)||latest.to_camp;
+  return chronological.reverse();
+}
+
+function v2SameAssignment(officeA,campA,officeB,campB){
+  const aOffice=String(officeA||'').trim().toUpperCase();
+  const bOffice=String(officeB||'').trim().toUpperCase();
+  const aCamp=v2NormalizeCamp(campA);
+  const bCamp=v2NormalizeCamp(campB);
+  return aOffice===bOffice && (!aCamp||!bCamp||aCamp===bCamp);
+}
+
+function v2PreviousAssignment(movements,person){
+  if(!movements.length)return null;
+  const currentOffice=person?.office;
+  const currentCamp=person?.camp;
+
+  // Movement rows are newest first. The most recent completed TO assignment
+  // that differs from LIST is the previous assignment.
+  for(const movement of movements){
+    if(movement.to_office && !v2SameAssignment(movement.to_office,movement.to_camp,currentOffice,currentCamp)){
+      return {office:movement.to_office,camp:movement.to_camp};
     }
   }
 
-  return chronological.reverse();
+  // If the newest movement already ends at the LIST assignment, its FROM side is previous.
+  const latest=movements[0];
+  if(latest?.from_office)return {office:latest.from_office,camp:latest.from_camp};
+  return null;
 }
 
 async function hydrateV2RelatedRecords(){
@@ -154,12 +174,8 @@ async function hydrateV2RelatedRecords(){
       if(person){
         const fullName=v2FullPersonnelName(person);
         if(fullName)setV2Text('profileName',fullName.toUpperCase());
-
         setV2Text('profileCurrentOffice',person.office);
         v2SetCampBadge(v2EnsureCurrentCampBadge(),person.camp);
-
-        setV2Text('profilePreviousOffice',person.previous_office);
-        v2SetCampBadge(document.getElementById('profileCampBadge'),'');
       }
     }
 
@@ -197,18 +213,20 @@ async function hydrateV2RelatedRecords(){
       )
     );
 
-    if(officeMovements.length){
-      const latest=officeMovements[0];
+    // LIST is authoritative for the current assignment.
+    if(person){
+      setV2Text('profileCurrentOffice',person.office);
+      v2SetCampBadge(v2EnsureCurrentCampBadge(),person.camp);
+    }
 
-      // LIST remains authoritative for the present assignment.
-      const currentOffice=(person&&person.office)||latest.to_office;
-      const currentCamp=(person&&person.camp)||latest.to_camp;
-      setV2Text('profileCurrentOffice',currentOffice);
-      v2SetCampBadge(v2EnsureCurrentCampBadge(),currentCamp);
-
-      // The latest movement's FROM side is the immediately previous assignment.
-      setV2Text('profilePreviousOffice',latest.from_office);
-      v2SetCampBadge(document.getElementById('profileCampBadge'),latest.from_camp);
+    // Previous assignment comes from the latest historical assignment that differs from LIST.
+    const previous=v2PreviousAssignment(officeMovements,person);
+    if(previous){
+      setV2Text('profilePreviousOffice',previous.office);
+      v2SetCampBadge(document.getElementById('profileCampBadge'),previous.camp);
+    }else{
+      setV2Text('profilePreviousOffice',person?.previous_office);
+      v2SetCampBadge(document.getElementById('profileCampBadge'),'');
     }
 
     const admin=(data.administrative_documents||[]).map(item=>[
