@@ -143,7 +143,7 @@ class PersonnelService:
             office_movements = [
                 dict(row)
                 for row in connection.execute(
-                    "SELECT from_office, to_office, position, from_date, to_date, remarks "
+                    "SELECT from_office, from_camp, to_office, to_camp, position, from_date, to_date, remarks "
                     "FROM office_movements WHERE badge_number = ? "
                     "ORDER BY COALESCE(from_date, '') DESC, source_order DESC",
                     (badge,),
