@@ -75,12 +75,14 @@ function v2EnsureCurrentCampBadge(){
 }
 
 function v2FullPersonnelName(person){
-  return [person.first_name,person.middle_name,person.last_name,person.suffix]
-    .map(value=>String(value||'').trim())
-    .filter(Boolean)
-    .join(' ')
-    .replace(/\s+/g,' ')
-    .trim();
+  const last=String(person?.last_name||'').trim();
+  const first=String(person?.first_name||'').trim();
+  const middle=String(person?.middle_name||'').trim();
+  const suffix=String(person?.suffix||'').trim();
+  const given=[first,suffix].filter(Boolean).join(' ');
+  const afterComma=[given,middle?`y ${middle}`:''].filter(Boolean).join(' ');
+  if(last&&afterComma)return `${last}, ${afterComma}`.replace(/\s+/g,' ').trim();
+  return [last,afterComma].filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
 }
 
 function v2BuildTable(headers,rows,emptyMessage){
