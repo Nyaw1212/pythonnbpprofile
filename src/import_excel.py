@@ -14,10 +14,10 @@ EXPECTED_HEADERS = {
  "MOTHER NAME":"mother_name","MOTHERS NAME":"mother_name","MOTHER'S NAME":"mother_name","MOTHER OCCUPATION":"mother_occupation","MOTHER ADDRESS":"mother_address","MOTHERS ADDRESS":"mother_address","MOTHER'S ADDRESS":"mother_address",
  "SPOUSE":"spouse_name","SPOUSE NAME":"spouse_name","SPOUSE OCCUPATION":"spouse_occupation","SPOUSE ADDRESS":"spouse_address",
  "EMERGENCY CONTACT":"emergency_contact","CONTACT PERSON":"emergency_contact","EMERGENCY RELATIONSHIP":"emergency_relationship","RELATIONSHIP":"emergency_relationship","REALTIONSHIP":"emergency_relationship","EMERGENCY NUMBER":"emergency_number","CONTACT NUMBER":"emergency_number","EMERGENCY ADDRESS":"emergency_address","ADDRESS":"emergency_address",
- "ELEMENTARY":"elementary_school","ELEMENTARY SCHOOL":"elementary_school","ELEMENTARY ADDRESS":"elementary_address","ELEMENTARY YEAR GRADUATED":"elementary_year_graduated",
- "HIGH SCHOOL":"high_school","HIGH SCHOOL ADDRESS":"high_school_address","HIGH SCHOOL YEAR GRADUATED":"high_school_year_graduated",
- "COLLEGE":"college","COLLEGE ADDRESS":"college_address","COLLEGE YEAR GRADUATED":"college_year_graduated",
- "GRADUATE STUDIES":"graduate_studies","GRADUATE STUDIES ADDRESS":"graduate_studies_address","GRADUATE STUDIES YEAR GRADUATED":"graduate_studies_year_graduated"
+ "ELEMENTARY":"elementary_school","ELEMENTARY SCHOOL":"elementary_school","ELEMENTARY COURSE":"elementary_course","ELEMENTARY ADDRESS":"elementary_address","ELEMENTARY YEAR GRADUATED":"elementary_year_graduated",
+ "HIGH SCHOOL":"high_school","HIGH SCHOOL COURSE":"high_school_course","HIGH SCHOOL ADDRESS":"high_school_address","HIGH SCHOOL YEAR GRADUATED":"high_school_year_graduated",
+ "COLLEGE":"college","COLLEGE COURSE":"college_course","COURSE":"college_course","COLLEGE ADDRESS":"college_address","COLLEGE YEAR GRADUATED":"college_year_graduated",
+ "GRADUATE STUDIES":"graduate_studies","GRADUATE STUDIES COURSE":"graduate_studies_course","GRADUATE COURSE":"graduate_studies_course","GRADUATE STUDIES ADDRESS":"graduate_studies_address","GRADUATE STUDIES YEAR GRADUATED":"graduate_studies_year_graduated"
 }
 FIELDS=list(dict.fromkeys(EXPECTED_HEADERS.values()))
 INSERT_SQL=f"""INSERT INTO personnel ({', '.join(FIELDS)}, source_order) VALUES ({', '.join(':'+f for f in FIELDS)}, :source_order)
