@@ -175,12 +175,11 @@ async function hydrateV2RelatedRecords(){
     const commendations=(data.commendations||[]).map(item=>[
       v2RelatedDate(item.date_received),
       item.award_title,
-      item.presented_by,
-      item.remarks
+      item.presented_by
     ]);
     v2ReplaceSectionBody(
       v2FindSection('COMMENDATIONS / RECOGNITIONS'),
-      v2BuildTable(['Date Received','Award / Title','Presented By','Remarks'],commendations,'No commendation records yet.')
+      v2BuildTable(['Date','Award / Title','Issued By'],commendations,'No commendation records yet.')
     );
 
     const officeMovements=v2NormalizeMovements(data.office_movements||[]);
