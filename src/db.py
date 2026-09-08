@@ -142,13 +142,47 @@ CREATE INDEX IF NOT EXISTS idx_personnel_first_name ON personnel(first_name);
 CREATE INDEX IF NOT EXISTS idx_personnel_camp ON personnel(camp);
 CREATE INDEX IF NOT EXISTS idx_personnel_office ON personnel(office);
 CREATE INDEX IF NOT EXISTS idx_personnel_rank ON personnel(rank);
+
+CREATE TABLE IF NOT EXISTS commendations (
+    record_id TEXT,
+    badge_number TEXT,
+    date_received TEXT,
+    award_title TEXT,
+    presented_by TEXT,
+    remarks TEXT,
+    source_order INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_commendations_badge ON commendations(badge_number);
+
+CREATE TABLE IF NOT EXISTS office_movements (
+    record_id TEXT,
+    badge_number TEXT,
+    from_office TEXT,
+    to_office TEXT,
+    position TEXT,
+    from_date TEXT,
+    to_date TEXT,
+    remarks TEXT,
+    source_order INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_office_movements_badge ON office_movements(badge_number);
+
+CREATE TABLE IF NOT EXISTS administrative_documents (
+    record_id TEXT,
+    badge_number TEXT,
+    date_received TEXT,
+    memo_no TEXT,
+    subject_description TEXT,
+    document_from TEXT,
+    remarks TEXT,
+    source_order INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_admin_docs_badge ON administrative_documents(badge_number);
 """
 
 def connect(db_path: Path | str = DB_PATH) -> sqlite3.Connection:
-    path = Path(db_path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(path)
-    connection.row_factory = sqlite3.Row
+    path = Path(db_path); path.parent.mkdir(parents=True, exist_ok=True)
+    connection = sqlite3.connect(path); connection.row_factory = sqlite3.Row
     return connection
 
 def _migrate(connection: sqlite3.Connection) -> None:
@@ -161,5 +195,4 @@ def _migrate(connection: sqlite3.Connection) -> None:
 
 def initialize(db_path: Path | str = DB_PATH) -> None:
     with connect(db_path) as connection:
-        connection.executescript(BASE_SCHEMA)
-        _migrate(connection)
+        connection.executescript(BASE_SCHEMA); _migrate(connection)
