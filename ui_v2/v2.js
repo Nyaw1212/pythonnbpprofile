@@ -137,19 +137,31 @@ function hydrateV2Family(person){
 }
 
 function hydrateV2Education(person){
-  const rows=document.querySelectorAll('.v2-education-table tbody tr');
+  const table=document.querySelector('.v2-education-table');
+  if(!table)return;
+
+  const headerRow=table.querySelector('thead tr');
+  if(headerRow){
+    headerRow.innerHTML='<th>School Level</th><th>School Attended</th><th>Address</th><th>Year Graduated</th>';
+  }
+
+  const levels=['Elementary','High School','College','Graduate Studies'];
   const data=[
     [person.elementary_school,person.elementary_address,person.elementary_year_graduated],
     [person.high_school,person.high_school_address,person.high_school_year_graduated],
     [person.college,person.college_address,person.college_year_graduated],
     [person.graduate_studies,person.graduate_studies_address,person.graduate_studies_year_graduated]
   ];
+
+  const rows=table.querySelectorAll('tbody tr');
   rows.forEach((row,index)=>{
+    if(!data[index])return;
+    row.innerHTML='<td></td><td></td><td></td><td></td>';
     const cells=row.querySelectorAll('td');
-    if(!cells.length||!data[index])return;
-    setV2Node(cells[0],data[index][0]);
-    setV2Node(cells[1],data[index][1]);
-    setV2Node(cells[2],data[index][2]);
+    setV2Node(cells[0],levels[index]);
+    setV2Node(cells[1],data[index][0]);
+    setV2Node(cells[2],data[index][1]);
+    setV2Node(cells[3],data[index][2]);
   });
 }
 
