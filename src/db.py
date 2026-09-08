@@ -158,7 +158,9 @@ CREATE TABLE IF NOT EXISTS office_movements (
     record_id TEXT,
     badge_number TEXT,
     from_office TEXT,
+    from_camp TEXT,
     to_office TEXT,
+    to_camp TEXT,
     position TEXT,
     from_date TEXT,
     to_date TEXT,
@@ -181,18 +183,24 @@ CREATE INDEX IF NOT EXISTS idx_admin_docs_badge ON administrative_documents(badg
 """
 
 def connect(db_path: Path | str = DB_PATH) -> sqlite3.Connection:
-    path = Path(db_path); path.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(path); connection.row_factory = sqlite3.Row
+    path = Path(db_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    connection = sqlite3.connect(path)
+    connection.row_factory = sqlite3.Row
     return connection
 
-def _migrate(connection: sqlite3.Connection) -> None:
-    columns = {row["name"] for row in connection.execute("PRAGMA table_info(personnel)").fetchall()}
-    required = {"source_order": "INTEGER", "drive_file_id": "TEXT", **PROFILE_FIELDS}
+def _ensure_columns(connection: sqlite3.Connection, table: str, required: dict[str, str]) -> None:
+    columns = {row["name"] for row in connection.execute(f"PRAGMA table_info({table})").fetchall()}
     for name, sql_type in required.items():
         if name not in columns:
-            connection.execute(f"ALTER TABLE personnel ADD COLUMN {name} {sql_type}")
+            connection.execute(f"ALTER TABLE {table} ADD COLUMN {name} {sql_type}")
+
+def _migrate(connection: sqlite3.Connection) -> None:
+    _ensure_columns(connection, "personnel", {"source_order": "INTEGER", "drive_file_id": "TEXT", **PROFILE_FIELDS})
+    _ensure_columns(connection, "office_movements", {"from_camp": "TEXT", "to_camp": "TEXT"})
     connection.execute("CREATE INDEX IF NOT EXISTS idx_personnel_source_order ON personnel(source_order)")
 
 def initialize(db_path: Path | str = DB_PATH) -> None:
     with connect(db_path) as connection:
-        connection.executescript(BASE_SCHEMA); _migrate(connection)
+        connection.executescript(BASE_SCHEMA)
+        _migrate(connection)
