@@ -16,6 +16,16 @@ function v2RelatedDate(value){
   return parsed.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
 }
 
+function v2MovementToDate(value){
+  return value===null||value===undefined||String(value).trim()===''?'PRESENT':v2RelatedDate(value);
+}
+
+function v2MovementTimestamp(value){
+  if(!value)return Number.NEGATIVE_INFINITY;
+  const parsed=new Date(String(value));
+  return Number.isNaN(parsed.getTime())?Number.NEGATIVE_INFINITY:parsed.getTime();
+}
+
 function v2NormalizeCamp(value){
   const camp=String(value||'').trim().toUpperCase();
   const aliases={NPB:'NBP',MAX:'MAXIMUM',MED:'MEDIUM',MIN:'MINIMUM'};
@@ -41,6 +51,13 @@ function v2SetCampBadge(node,camp){
   node.textContent=normalized||'—';
   node.style.background=palette.background;
   node.style.color=palette.color;
+}
+
+function v2SetConflictBadge(node){
+  if(!node)return;
+  node.textContent='CONFLICT';
+  node.style.background='#b42318';
+  node.style.color='#fff';
 }
 
 function v2EnsureCurrentCampBadge(){
@@ -109,59 +126,34 @@ function v2ReplaceSectionBody(section,node){
   section.appendChild(node);
 }
 
-function v2RepairMovementChain(rawMovements,person){
-  const chronological=[...(rawMovements||[])].reverse().map(item=>({
-    ...item,
-    from_camp:v2NormalizeCamp(item.from_camp),
-    to_camp:v2NormalizeCamp(item.to_camp)
-  }));
-
-  chronological.forEach((item,index)=>{
-    const previous=index>0?chronological[index-1]:null;
-    const next=index<chronological.length-1?chronological[index+1]:null;
-
-    if(!item.from_camp&&previous&&
-       String(previous.to_office||'').trim().toUpperCase()===String(item.from_office||'').trim().toUpperCase()){
-      item.from_camp=previous.to_camp;
-    }
-
-    if(!item.to_camp&&next&&
-       String(item.to_office||'').trim().toUpperCase()===String(next.from_office||'').trim().toUpperCase()){
-      item.to_camp=next.from_camp;
-    }
-
-    if(!item.from_camp&&/\bNBP\b/i.test(String(item.from_office||'')))item.from_camp='NBP';
-    if(!item.to_camp&&/\bNBP\b/i.test(String(item.to_office||'')))item.to_camp='NBP';
-  });
-
-  return chronological.reverse();
+function v2NormalizeMovements(rawMovements){
+  return [...(rawMovements||[])]
+    .map(item=>({
+      ...item,
+      from_camp:v2NormalizeCamp(item.from_camp),
+      to_camp:v2NormalizeCamp(item.to_camp)
+    }))
+    .sort((a,b)=>v2MovementTimestamp(b.from_date)-v2MovementTimestamp(a.from_date));
 }
 
-function v2SameAssignment(officeA,campA,officeB,campB){
-  const aOffice=String(officeA||'').trim().toUpperCase();
-  const bOffice=String(officeB||'').trim().toUpperCase();
-  const aCamp=v2NormalizeCamp(campA);
-  const bCamp=v2NormalizeCamp(campB);
-  return aOffice===bOffice && (!aCamp||!bCamp||aCamp===bCamp);
-}
-
-function v2PreviousAssignment(movements,person){
-  if(!movements.length)return null;
-  const currentOffice=person?.office;
-  const currentCamp=person?.camp;
-
-  // Movement rows are newest first. The most recent completed TO assignment
-  // that differs from LIST is the previous assignment.
-  for(const movement of movements){
-    if(movement.to_office && !v2SameAssignment(movement.to_office,movement.to_camp,currentOffice,currentCamp)){
-      return {office:movement.to_office,camp:movement.to_camp};
-    }
+function v2ResolveAssignments(movements){
+  const present=movements.filter(item=>item.to_date===null||item.to_date===undefined||String(item.to_date).trim()==='');
+  if(present.length>1){
+    return {conflict:true,current:null,previous:null,present_count:present.length};
   }
 
-  // If the newest movement already ends at the LIST assignment, its FROM side is previous.
-  const latest=movements[0];
-  if(latest?.from_office)return {office:latest.from_office,camp:latest.from_camp};
-  return null;
+  if(present.length===1){
+    const current=present[0];
+    const currentTime=v2MovementTimestamp(current.from_date);
+    const previous=movements
+      .filter(item=>item!==current && v2MovementTimestamp(item.from_date)<=currentTime)
+      .sort((a,b)=>v2MovementTimestamp(b.from_date)-v2MovementTimestamp(a.from_date))[0]||null;
+    return {conflict:false,current,previous,present_count:1};
+  }
+
+  const latest=movements[0]||null;
+  const previous=movements[1]||null;
+  return {conflict:false,current:latest,previous,present_count:0};
 }
 
 async function hydrateV2RelatedRecords(){
@@ -174,8 +166,6 @@ async function hydrateV2RelatedRecords(){
       if(person){
         const fullName=v2FullPersonnelName(person);
         if(fullName)setV2Text('profileName',fullName.toUpperCase());
-        setV2Text('profileCurrentOffice',person.office);
-        v2SetCampBadge(v2EnsureCurrentCampBadge(),person.camp);
       }
     }
 
@@ -193,7 +183,7 @@ async function hydrateV2RelatedRecords(){
       v2BuildTable(['Date Received','Award / Title','Presented By','Remarks'],commendations,'No commendation records yet.')
     );
 
-    const officeMovements=v2RepairMovementChain(data.office_movements||[],person);
+    const officeMovements=v2NormalizeMovements(data.office_movements||[]);
     const movements=officeMovements.map(item=>[
       item.from_camp,
       item.from_office,
@@ -201,7 +191,7 @@ async function hydrateV2RelatedRecords(){
       item.to_office,
       item.position,
       v2RelatedDate(item.from_date),
-      v2RelatedDate(item.to_date),
+      v2MovementToDate(item.to_date),
       item.remarks
     ]);
     v2ReplaceSectionBody(
@@ -213,20 +203,31 @@ async function hydrateV2RelatedRecords(){
       )
     );
 
-    // LIST is authoritative for the current assignment.
-    if(person){
-      setV2Text('profileCurrentOffice',person.office);
-      v2SetCampBadge(v2EnsureCurrentCampBadge(),person.camp);
-    }
+    const assignments=v2ResolveAssignments(officeMovements);
+    const currentBadge=v2EnsureCurrentCampBadge();
+    const previousBadge=document.getElementById('profileCampBadge');
 
-    // Previous assignment comes from the latest historical assignment that differs from LIST.
-    const previous=v2PreviousAssignment(officeMovements,person);
-    if(previous){
-      setV2Text('profilePreviousOffice',previous.office);
-      v2SetCampBadge(document.getElementById('profileCampBadge'),previous.camp);
+    if(assignments.conflict){
+      setV2Text('profileCurrentOffice',`${assignments.present_count} PRESENT ASSIGNMENTS`);
+      setV2Text('profilePreviousOffice','Check OFFICE_MOVEMENT');
+      v2SetConflictBadge(currentBadge);
+      v2SetConflictBadge(previousBadge);
+    }else if(assignments.current){
+      setV2Text('profileCurrentOffice',assignments.current.to_office||assignments.current.from_office);
+      v2SetCampBadge(currentBadge,assignments.current.to_camp||assignments.current.from_camp);
+
+      if(assignments.previous){
+        setV2Text('profilePreviousOffice',assignments.previous.to_office||assignments.previous.from_office);
+        v2SetCampBadge(previousBadge,assignments.previous.to_camp||assignments.previous.from_camp);
+      }else{
+        setV2Text('profilePreviousOffice','—');
+        v2SetCampBadge(previousBadge,'');
+      }
     }else{
-      setV2Text('profilePreviousOffice',person?.previous_office);
-      v2SetCampBadge(document.getElementById('profileCampBadge'),'');
+      setV2Text('profileCurrentOffice','—');
+      setV2Text('profilePreviousOffice','—');
+      v2SetCampBadge(currentBadge,'');
+      v2SetCampBadge(previousBadge,'');
     }
 
     const admin=(data.administrative_documents||[]).map(item=>[
