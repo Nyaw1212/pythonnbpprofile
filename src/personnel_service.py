@@ -128,6 +128,42 @@ class PersonnelService:
             ).fetchone()
         return dict(row) if row else None
 
+    def get_related_records(self, badge_number: str) -> dict[str, list[dict[str, Any]]]:
+        badge = str(badge_number)
+        with connect(self.db_path) as connection:
+            commendations = [
+                dict(row)
+                for row in connection.execute(
+                    "SELECT date_received, award_title, presented_by, remarks "
+                    "FROM commendations WHERE badge_number = ? "
+                    "ORDER BY COALESCE(date_received, '') DESC, source_order DESC",
+                    (badge,),
+                ).fetchall()
+            ]
+            office_movements = [
+                dict(row)
+                for row in connection.execute(
+                    "SELECT from_office, to_office, position, from_date, to_date, remarks "
+                    "FROM office_movements WHERE badge_number = ? "
+                    "ORDER BY COALESCE(from_date, '') DESC, source_order DESC",
+                    (badge,),
+                ).fetchall()
+            ]
+            administrative_documents = [
+                dict(row)
+                for row in connection.execute(
+                    "SELECT date_received, memo_no, subject_description, document_from, remarks "
+                    "FROM administrative_documents WHERE badge_number = ? "
+                    "ORDER BY COALESCE(date_received, '') DESC, source_order DESC",
+                    (badge,),
+                ).fetchall()
+            ]
+        return {
+            "commendations": commendations,
+            "office_movements": office_movements,
+            "administrative_documents": administrative_documents,
+        }
+
     def update_drive_file_id(self, badge_number: str, drive_file_id: str) -> bool:
         with connect(self.db_path) as connection:
             cursor = connection.execute(
