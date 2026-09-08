@@ -75,10 +75,10 @@ function v2EnsureCurrentCampBadge(){
 }
 
 function v2FullPersonnelName(person){
-  const last=String(person?.last_name||'').trim();
-  const first=String(person?.first_name||'').trim();
-  const middle=String(person?.middle_name||'').trim();
-  const suffix=String(person?.suffix||'').trim();
+  const last=String(person?.last_name||'').trim().toUpperCase();
+  const first=String(person?.first_name||'').trim().toUpperCase();
+  const middle=String(person?.middle_name||'').trim().toUpperCase();
+  const suffix=String(person?.suffix||'').trim().toUpperCase();
   const given=[first,suffix].filter(Boolean).join(' ');
   const afterComma=[given,middle?`y ${middle}`:''].filter(Boolean).join(' ');
   if(last&&afterComma)return `${last}, ${afterComma}`.replace(/\s+/g,' ').trim();
@@ -167,7 +167,7 @@ async function hydrateV2RelatedRecords(){
       person=await pywebview.api.get_profile(String(state.currentBadge));
       if(person){
         const fullName=v2FullPersonnelName(person);
-        if(fullName)setV2Text('profileName',fullName.toUpperCase());
+        if(fullName)setV2Text('profileName',fullName);
       }
     }
 
@@ -180,7 +180,7 @@ async function hydrateV2RelatedRecords(){
       item.presented_by
     ]);
     v2ReplaceSectionBody(
-      v2FindSection('COMMENDATIONS / RECOGNITIONS'),
+      v2FindSection('COMMENDATIONS / RECOGNITIONS / AWARDS'),
       v2BuildTable(['Date','Award / Title','Issued By'],commendations,'No commendation records yet.')
     );
 
